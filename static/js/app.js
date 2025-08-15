@@ -137,50 +137,68 @@ const taskDateInput = document.getElementById("task-date");
 const addTaskBtn = document.getElementById("add-task-btn");
 const tasksList = document.getElementById("tasks-list");
 
-// Load tasks from Firestore
+// Add / Edit state
+let editTaskId = null;
+
+// Load tasks from Firebase
 function loadTasks() {
     tasksList.innerHTML = "";
-    db.collection("tasks").orderBy("createdAt", "asc").get()
-    .then(snapshot => {
-        snapshot.forEach(doc => {
-            const task = doc.data();
-            const taskCard = document.createElement("div");
-            taskCard.classList.add("task-card");
 
-            taskCard.innerHTML = `
+    db.collection("tasks").get()
+    .then(snapshot => {
+        tasks = [];
+        snapshot.forEach(doc => {
+            tasks.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sort tasks by datetime (earliest first)
+        tasks.sort((a, b) => new Date(a.taskDate) - new Date(b.taskDate));
+
+        tasks.forEach(task => {
+            const card = document.createElement("div");
+            card.classList.add("task-card");
+            if (task.completed) card.classList.add("completed");
+
+            card.innerHTML = `
+                <div style="display:flex; justify-content: flex-end;">
+                    <input type="checkbox" class="complete-checkbox" ${task.completed ? "checked" : ""}>
+                </div>
                 <h3>${task.taskName}</h3>
                 <p><strong>Subject:</strong> ${task.subjectName}</p>
                 <p><strong>Time:</strong> ${new Date(task.taskDate).toLocaleString()}</p>
-                <div class="task-card-buttons">
+                <div style="display:flex; justify-content: space-between; margin-top:10px;">
                     <button class="edit-btn">Edit</button>
                     <button class="delete-btn">Delete</button>
                 </div>
             `;
 
-            // Delete Task
-            taskCard.querySelector(".delete-btn").addEventListener("click", () => {
-                db.collection("tasks").doc(doc.id).delete()
-                .then(() => loadTasks())
-                .catch(err => console.error("Error deleting task: ", err));
+            // Checkbox toggle
+            card.querySelector(".complete-checkbox").addEventListener("change", (e) => {
+                db.collection("tasks").doc(task.id).update({ completed: e.target.checked })
+                .then(() => loadTasks());
             });
 
-            // Edit Task
-            taskCard.querySelector(".edit-btn").addEventListener("click", () => {
+            // Delete button
+            card.querySelector(".delete-btn").addEventListener("click", () => {
+                db.collection("tasks").doc(task.id).delete().then(() => loadTasks());
+            });
+
+            // Edit button
+            card.querySelector(".edit-btn").addEventListener("click", () => {
                 taskNameInput.value = task.taskName;
                 subjectNameInput.value = task.subjectName;
                 taskDateInput.value = task.taskDate;
-
+                editTaskId = task.id;
                 addTaskBtn.textContent = "Update Task";
-                addTaskBtn.dataset.editingTaskId = doc.id;
             });
 
-            tasksList.appendChild(taskCard);
+            tasksList.appendChild(card);
         });
     })
-    .catch(error => console.error("Error loading tasks: ", error));
+    .catch(error => console.error("Error loading tasks:", error));
 }
 
-// Add or Update Task
+// Add / Update task
 addTaskBtn.addEventListener("click", () => {
     const taskName = taskNameInput.value.trim();
     const subjectName = subjectNameInput.value.trim();
@@ -191,41 +209,34 @@ addTaskBtn.addEventListener("click", () => {
         return;
     }
 
-    const editingTaskId = addTaskBtn.dataset.editingTaskId;
-
-    if (editingTaskId) {
+    if (editTaskId) {
         // Update existing task
-        db.collection("tasks").doc(editingTaskId).update({
-            taskName,
-            subjectName,
-            taskDate
-        })
-        .then(() => {
+        db.collection("tasks").doc(editTaskId).update({
+            taskName, subjectName, taskDate
+        }).then(() => {
+            editTaskId = null;
+            addTaskBtn.textContent = "Add Task";
             taskNameInput.value = "";
             subjectNameInput.value = "";
             taskDateInput.value = "";
-            addTaskBtn.textContent = "Add Task";
-            delete addTaskBtn.dataset.editingTaskId;
             loadTasks();
-        })
-        .catch(err => console.error("Error updating task: ", err));
+        });
     } else {
         // Add new task
         db.collection("tasks").add({
-            taskName,
-            subjectName,
-            taskDate,
+            taskName, subjectName, taskDate, completed: false,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then(() => {
+        }).then(() => {
             taskNameInput.value = "";
             subjectNameInput.value = "";
             taskDateInput.value = "";
             loadTasks();
-        })
-        .catch(err => console.error("Error adding task: ", err));
+        });
     }
 });
+
+
+
 
 // Load tasks on page load
 window.addEventListener("DOMContentLoaded", () => {
