@@ -236,9 +236,190 @@ addTaskBtn.addEventListener("click", () => {
 });
 
 
-
-
 // Load tasks on page load
 window.addEventListener("DOMContentLoaded", () => {
     loadTasks();
+});
+
+
+/* ===== Quiz Frontend Logic ===== */
+(() => {
+  const topicInput = document.getElementById("quiz-topic");
+  const diffSelect = document.getElementById("quiz-difficulty");
+  const genBtn = document.getElementById("quiz-generate");
+  const loader = document.getElementById("quiz-loader");
+  const card = document.getElementById("quiz-card");
+  const result = document.getElementById("quiz-result");
+  const errorBox = document.getElementById("quiz-error");
+  const quizQuestion = document.getElementById("quiz-question");
+  const quizOptions = document.getElementById("quiz-options");
+  const quizProgress = document.getElementById("quiz-progress");
+  const quizScore = document.getElementById("quiz-score");
+  const submitBtn = document.getElementById("quiz-submit");
+  const nextBtn = document.getElementById("quiz-next");
+  const feedback = document.getElementById("quiz-feedback");
+  const resultTitle = document.getElementById("quiz-result-title");
+  const resultSummary = document.getElementById("quiz-result-summary");
+  const retryBtn = document.getElementById("quiz-retry");
+
+  let questions = [];
+  let idx = 0;
+  let score = 0;
+  let chosen = null;
+
+  function showLoader(on) {
+    loader.hidden = !on;
+    card.hidden = on;
+    result.hidden = true;
+    errorBox.hidden = true;
+  }
+
+  function showError(msg) {
+    errorBox.hidden = false;
+    errorBox.querySelector("p").textContent = msg || "Something went wrong.";
+    showLoader(false);
+  }
+
+  async function fetchQuiz(topic, difficulty) {
+    showLoader(true);
+    try {
+      const res = await fetch("/quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, difficulty })
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Quiz generation failed");
+      return data.questions;
+    } catch (err) {
+      throw err;
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  function renderQuestion(i) {
+    chosen = null;
+    const q = questions[i];
+    quizProgress.textContent = `Q ${i+1}/${questions.length}`;
+    quizScore.textContent = `Score: ${score}`;
+    quizQuestion.textContent = q.question;
+    quizOptions.innerHTML = "";
+    feedback.hidden = true;
+    submitBtn.disabled = false;
+    nextBtn.disabled = true;
+
+    q.options.forEach((opt, j) => {
+      const id = `opt-${i}-${j}`;
+      const wrapper = document.createElement("label");
+      wrapper.className = "quiz-option";
+      wrapper.htmlFor = id;
+      wrapper.innerHTML = `
+        <input type="radio" name="quiz-opt" id="${id}" data-index="${j}">
+        <span class="opt-text">${opt}</span>
+      `;
+      wrapper.querySelector("input").addEventListener("change", (e) => {
+        chosen = parseInt(e.target.dataset.index, 10);
+      });
+      quizOptions.appendChild(wrapper);
+    });
+  }
+
+  function showFeedback(isCorrect, explanation) {
+    feedback.hidden = false;
+    feedback.innerHTML = isCorrect 
+      ? `<strong>Correct ✅</strong><div>${explanation}</div>` 
+      : `<strong>Incorrect ❌</strong><div>${explanation}</div>`;
+  }
+
+  submitBtn.addEventListener("click", () => {
+    if (chosen === null) return alert("Select an answer first.");
+    submitBtn.disabled = true;
+    const q = questions[idx];
+    const isCorrect = (chosen === q.answer);
+    if (isCorrect) score++;
+    showFeedback(isCorrect, q.explanation);
+    quizScore.textContent = `Score: ${score}`;
+    nextBtn.disabled = false;
+  });
+
+  nextBtn.addEventListener("click", () => {
+    idx++;
+    if (idx >= questions.length) {
+      // show final result
+      card.hidden = true;
+      result.hidden = false;
+      let title = "Nice work!";
+      let summary = `You scored ${score}/${questions.length}.`;
+      if (score === questions.length) {
+        title = "Excellent! 🎉";
+        summary = "Perfect score! Keep up the amazing work!";
+      } else if (score >= Math.ceil(questions.length * 0.6)) {
+        title = "Great job!";
+        summary = "Good progress — keep practicing to get even better!";
+      } else {
+        title = "Keep going!";
+        summary = "Don't worry — with practice you'll improve. Try another quiz!";
+      }
+      resultTitle.textContent = title;
+      resultSummary.textContent = summary;
+      return;
+    }
+    renderQuestion(idx);
+  });
+
+  retryBtn.addEventListener("click", () => {
+    // reset UI
+    questions = [];
+    idx = 0;
+    score = 0;
+    chosen = null;
+    card.hidden = true;
+    result.hidden = true;
+  });
+
+  genBtn.addEventListener("click", async () => {
+    const topic = topicInput.value.trim();
+    const difficulty = diffSelect.value || "auto";
+    if (!topic) return alert("Please enter a topic (e.g., Photosynthesis)");
+    try {
+      showLoader(true);
+      questions = await fetchQuiz(topic, difficulty);
+      if (!Array.isArray(questions) || questions.length !== 5) throw new Error("Bad quiz data");
+      idx = 0; score = 0; chosen = null;
+      renderQuestion(0);
+      card.hidden = false;
+      feedback.hidden = true;
+      showLoader(false);
+    } catch (err) {
+      showLoader(false);
+      showError(err.message || "Could not generate quiz.");
+      console.error(err);
+    }
+  });
+
+})();
+
+genBtn.addEventListener("click", async () => {
+    const topic = topicInput.value.trim();
+    const difficulty = diffSelect.value || "auto";
+    if (!topic) return alert("Please enter a topic (e.g., Photosynthesis)");
+
+    try {
+        showLoader(true); // show loader while fetching
+        questions = await fetchQuiz(topic, difficulty); // fetch quiz from server
+        if (!Array.isArray(questions) || questions.length !== 5) throw new Error("Bad quiz data");
+
+        idx = 0;
+        score = 0;
+        chosen = null;
+        renderQuestion(0);  // show first question
+        card.hidden = false;
+        feedback.hidden = true;
+    } catch (err) {
+        showError(err.message || "Could not generate quiz.");
+        console.error(err);
+    } finally {
+        showLoader(false); // hide loader after quiz appears or error
+    }
 });

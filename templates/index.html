@@ -9,12 +9,12 @@
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-<!-- Firebase App (the core Firebase SDK) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<!-- Firebase Firestore -->
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
 
 </head>
@@ -60,20 +60,19 @@
 
 
         <!-- Study Schedule Section -->
-<section id="study-schedule" class="study-schedule-section">
-    <h2 class="section-title">Your Study Schedule</h2>
-    
-    <div class="schedule-inputs">
-        <input type="text" id="task-name" placeholder="Task Name" />
-        <input type="text" id="subject-name" placeholder="Subject" />
-        <input type="datetime-local" id="task-date" />
-        <button id="add-task-btn" class="cta-button">Add Task</button>
-    </div>
+        <section class="study-schedule-section">
+            <div class="study-schedule-container">
+                <h2>My Study Schedule</h2>
+                <div class="schedule-inputs">
+                    <input type="text" id="task-name" placeholder="Task Name">
+                    <input type="text" id="subject-name" placeholder="Subject Name">
+                    <input type="datetime-local" id="task-date">
+                    <button id="add-task-btn">Add Task</button>
+                </div>
+                <div id="tasks-list"></div>
+            </div>
+        </section>
 
-    <div id="tasks-list" class="tasks-list">
-        <!-- Tasks will appear here dynamically -->
-    </div>
-</section>
 
 
 
@@ -90,6 +89,90 @@
                 </div>
             </div>
         </section>
+
+
+
+        <!-- ===== AI Quiz Section ===== -->
+<section id="quiz" class="quiz-section">
+  <h2 class="section-title">AI Quick Quiz</h2>
+
+  <div class="quiz-container">
+    <!-- Setup: topic & generate -->
+    <div class="quiz-setup">
+      <input
+        id="quiz-topic"
+        type="text"
+        placeholder="Enter a topic (e.g., Photosynthesis)"
+        aria-label="Quiz topic"
+      />
+
+      <select id="quiz-difficulty" aria-label="Difficulty">
+        <option value="auto" selected>Difficulty: Auto</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+
+      <button id="quiz-generate" class="cta-button">Generate 5 Questions</button>
+    </div>
+
+    <!-- Loader -->
+    <div id="quiz-loader" class="quiz-loader" hidden>
+      <div class="spinner"></div>
+      <span>Generating quiz…</span>
+    </div>
+
+    <!-- Quiz Card -->
+    <div id="quiz-card" class="quiz-card" hidden>
+      <div class="quiz-meta">
+        <span id="quiz-progress">Q 1/5</span>
+        <span id="quiz-score">Score: 0</span>
+      </div>
+
+      <h3 id="quiz-question" class="quiz-question">Question text goes here</h3>
+
+      <div id="quiz-options" class="quiz-options" role="radiogroup" aria-label="Answer choices">
+        <!-- Options injected here as radio buttons -->
+      </div>
+
+      <div class="quiz-actions">
+        <button id="quiz-submit" class="cta-button">Submit Answer</button>
+        <button id="quiz-next" class="cta-button" disabled>Next</button>
+      </div>
+
+      <div id="quiz-feedback" class="quiz-feedback" hidden>
+        <!-- Correct/incorrect + brief explanation -->
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="quiz-result" class="quiz-result" hidden>
+      <h3 id="quiz-result-title">Great job!</h3>
+      <p id="quiz-result-summary">You scored 5/5.</p>
+      <button id="quiz-retry" class="cta-button">Try Another Topic</button>
+    </div>
+
+    <!-- Error -->
+    <div id="quiz-error" class="quiz-error" hidden>
+      <p>Something went wrong generating your quiz. Please try again.</p>
+    </div>
+  </div>
+</section>
+
+
+    <!-- Results -->
+    <div id="quiz-result" class="quiz-result" hidden>
+      <h3 id="quiz-result-title">Great job!</h3>
+      <p id="quiz-result-summary">You scored 5/5.</p>
+      <button id="quiz-retry" class="cta-button">Try Another Topic</button>
+    </div>
+
+    <!-- Error -->
+    <div id="quiz-error" class="quiz-error" hidden>
+      <p>Something went wrong generating your quiz. Please try again.</p>
+    </div>
+  </div>
+</section>
 
 
 
