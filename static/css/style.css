@@ -255,6 +255,136 @@
             padding: 1rem 2.5rem;
         }
 
+
+
+/* ---------------- Study Schedule Section ---------------- */
+
+.study-schedule-section {
+    padding: 60px 20px;
+    text-align: center;
+    background: linear-gradient(145deg, #1e1e2f, #2a2a40);
+    border-top: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Main container with horizontal 20% gap and vertical spacing */
+.study-schedule-container {
+    max-width: 600px;
+    margin: 0 20%; /* 20% left and right gap */
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px; /* vertical spacing between Add Task section and task cards */
+}
+
+/* Inputs section matching card width */
+.schedule-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center; /* center horizontally */
+}
+
+.schedule-inputs input {
+    width: 100%; /* full width of container */
+    max-width: 500px; /* same as task card max-width */
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    backdrop-filter: blur(8px);
+}
+.schedule-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 40px; /* <-- adds extra space between add button and task cards */
+}
+.schedule-inputs button {
+    width: auto; /* smaller than input */
+    padding: 10px 20px; /* smaller button */
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    background: #6c5ce7;
+    color: white;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.schedule-inputs button:hover {
+    background: #a29bfe;
+    transform: translateY(-2px);
+}
+
+/* Task cards list */
+#tasks-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the cards container */
+    gap: 15px; /* Vertical spacing between cards */
+}
+
+/* Task card styling */
+#tasks-list .task-card {
+    width: 100%; /* Take full width of container */
+    max-width: 1000px; /* same width as inputs */
+    background: rgba(255, 255, 255, 0.05); /* semi-transparent glass effect */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    margin-bottom: 15px;
+    color: #f5f6fa; /* text color */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: left; /* Text aligned to left */
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+#tasks-list .task-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
+}
+
+#tasks-list .task-card h3 {
+    margin-bottom: 5px;
+}
+
+#tasks-list .task-card p {
+    margin-bottom: 5px;
+}
+
+/* Delete button styling */
+#tasks-list .task-card button.delete-btn {
+    align-self: flex-end; /* Button on right */
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: none;
+    background: #fd79a8;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+}
+
+#tasks-list .task-card button.delete-btn:hover {
+    background: #ff6b81;
+    transform: translateY(-2px);
+}
+
+
         /* Features Section */
         .features {
             padding: 8rem 5%;
