@@ -53,9 +53,9 @@ function initAnimations() {
         ease: "back.out(1.2)"
     });
 
-    document.querySelectorAll('.cta-button, .feature-card').forEach(element => {
-        element.addEventListener('mouseenter', () => gsap.to(element, { scale: 1.05, duration: 0.3 }));
-        element.addEventListener('mouseleave', () => gsap.to(element, { scale: 1, duration: 0.3 }));
+    document.querySelectorAll('.cta-button, .feature-card').forEach(el => {
+        el.addEventListener('mouseenter', () => gsap.to(el, { scale: 1.05, duration: 0.3 }));
+        el.addEventListener('mouseleave', () => gsap.to(el, { scale: 1, duration: 0.3 }));
     });
 
     document.querySelectorAll('.card-3d').forEach(card => {
@@ -87,8 +87,7 @@ const sendBtn = document.getElementById("send-btn");
 
 function addMessage(sender, text) {
     const msg = document.createElement("div");
-    msg.classList.add("chat-message");
-    msg.classList.add(sender); // "user" or "bot"
+    msg.classList.add("chat-message", sender);
     msg.innerHTML = `<p>${text}</p>`;
     chatWindow.appendChild(msg);
     chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -138,60 +137,12 @@ const taskDateInput = document.getElementById("task-date");
 const addTaskBtn = document.getElementById("add-task-btn");
 const tasksList = document.getElementById("tasks-list");
 
-let tasks = []; // Store tasks in memory
-
-// Function to render tasks
-function renderTasks() {
-    tasksList.innerHTML = ""; // Clear existing tasks
-
-    tasks.forEach((task, index) => {
-        const taskCard = document.createElement("div");
-        taskCard.classList.add("task-card");
-
-        taskCard.innerHTML = `
-            <h3>${task.taskName}</h3>
-            <p><strong>Subject:</strong> ${task.subjectName}</p>
-            <p><strong>Time:</strong> ${new Date(task.taskDate).toLocaleString()}</p>
-            <button class="delete-btn">Delete</button>
-        `;
-
-        // Delete task functionality
-        taskCard.querySelector(".delete-btn").addEventListener("click", () => {
-            const taskId = task.id;
-            db.collection("tasks").doc(taskId).delete()
-                .then(() => {
-                    tasks.splice(index, 1);
-                    renderTasks();
-                });
-        });
-
-        tasksList.appendChild(taskCard);
-    });
-}
-
 // Load tasks from Firestore
 function loadTasks() {
+    tasksList.innerHTML = "";
     db.collection("tasks").orderBy("createdAt", "asc").get()
-        .then(snapshot => {
-            tasks = [];
-            snapshot.forEach(doc => {
-                tasks.push({ id: doc.id, ...doc.data() });
-            });
-            renderTasks();
-        })
-        .catch(error => {
-            console.error("Error loading tasks: ", error);
-        });
-}
-
-
-// Function to load tasks from Firestore
-function loadTasks() {
-    tasksList.innerHTML = ""; // Clear the list first
-
-    db.collection("tasks").orderBy("createdAt", "asc").get()
-    .then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
+    .then(snapshot => {
+        snapshot.forEach(doc => {
             const task = doc.data();
             const taskCard = document.createElement("div");
             taskCard.classList.add("task-card");
@@ -200,31 +151,36 @@ function loadTasks() {
                 <h3>${task.taskName}</h3>
                 <p><strong>Subject:</strong> ${task.subjectName}</p>
                 <p><strong>Time:</strong> ${new Date(task.taskDate).toLocaleString()}</p>
-                <button class="delete-btn">Delete</button>
+                <div class="task-card-buttons">
+                    <button class="edit-btn">Edit</button>
+                    <button class="delete-btn">Delete</button>
+                </div>
             `;
 
-            // Delete task from Firestore
+            // Delete Task
             taskCard.querySelector(".delete-btn").addEventListener("click", () => {
                 db.collection("tasks").doc(doc.id).delete()
-                .then(() => {
-                    loadTasks();
-                })
-                .catch((error) => {
-                    console.error("Error deleting task: ", error);
-                });
+                .then(() => loadTasks())
+                .catch(err => console.error("Error deleting task: ", err));
+            });
+
+            // Edit Task
+            taskCard.querySelector(".edit-btn").addEventListener("click", () => {
+                taskNameInput.value = task.taskName;
+                subjectNameInput.value = task.subjectName;
+                taskDateInput.value = task.taskDate;
+
+                addTaskBtn.textContent = "Update Task";
+                addTaskBtn.dataset.editingTaskId = doc.id;
             });
 
             tasksList.appendChild(taskCard);
         });
     })
-    .catch((error) => {
-        console.error("Error loading tasks: ", error);
-    });
+    .catch(error => console.error("Error loading tasks: ", error));
 }
 
-
-
-
+// Add or Update Task
 addTaskBtn.addEventListener("click", () => {
     const taskName = taskNameInput.value.trim();
     const subjectName = subjectNameInput.value.trim();
@@ -235,24 +191,41 @@ addTaskBtn.addEventListener("click", () => {
         return;
     }
 
-    db.collection("tasks").add({
-        taskName,
-        subjectName,
-        taskDate,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    })
-    .then(() => {
-        taskNameInput.value = "";
-        subjectNameInput.value = "";
-        taskDateInput.value = "";
-        loadTasks(); // Refresh the task list
-    })
-    .catch((error) => {
-        console.error("Error adding task: ", error);
-    });
+    const editingTaskId = addTaskBtn.dataset.editingTaskId;
+
+    if (editingTaskId) {
+        // Update existing task
+        db.collection("tasks").doc(editingTaskId).update({
+            taskName,
+            subjectName,
+            taskDate
+        })
+        .then(() => {
+            taskNameInput.value = "";
+            subjectNameInput.value = "";
+            taskDateInput.value = "";
+            addTaskBtn.textContent = "Add Task";
+            delete addTaskBtn.dataset.editingTaskId;
+            loadTasks();
+        })
+        .catch(err => console.error("Error updating task: ", err));
+    } else {
+        // Add new task
+        db.collection("tasks").add({
+            taskName,
+            subjectName,
+            taskDate,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+            taskNameInput.value = "";
+            subjectNameInput.value = "";
+            taskDateInput.value = "";
+            loadTasks();
+        })
+        .catch(err => console.error("Error adding task: ", err));
+    }
 });
-
-
 
 // Load tasks on page load
 window.addEventListener("DOMContentLoaded", () => {

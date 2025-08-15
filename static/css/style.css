@@ -258,7 +258,6 @@
 
 
 /* ---------------- Study Schedule Section ---------------- */
-
 .study-schedule-section {
     padding: 60px 20px;
     text-align: center;
@@ -286,6 +285,7 @@
     flex-direction: column;
     gap: 15px;
     align-items: center; /* center horizontally */
+    margin-bottom: 40px; /* spacing between add button and task cards */
 }
 
 .schedule-inputs input {
@@ -300,13 +300,7 @@
     color: white;
     backdrop-filter: blur(8px);
 }
-.schedule-inputs {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-    margin-bottom: 40px; /* <-- adds extra space between add button and task cards */
-}
+
 .schedule-inputs button {
     width: auto; /* smaller than input */
     padding: 10px 20px; /* smaller button */
@@ -329,8 +323,8 @@
 #tasks-list {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center the cards container */
-    gap: 15px; /* Vertical spacing between cards */
+    align-items: center; /* center the cards container */
+    gap: 15px; /* vertical spacing between cards */
 }
 
 /* Task card styling */
@@ -342,14 +336,12 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 15px;
     padding: 15px 20px;
-    margin-bottom: 20px;
-    margin-bottom: 15px;
     color: #f5f6fa; /* text color */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    text-align: left; /* Text aligned to left */
+    gap: 10px;
+    text-align: left; /* text aligned left */
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
@@ -366,23 +358,47 @@
     margin-bottom: 5px;
 }
 
-/* Delete button styling */
-#tasks-list .task-card button.delete-btn {
-    align-self: flex-end; /* Button on right */
+/* Task card buttons wrapper */
+.task-card .task-card-buttons {
+    display: flex;
+    justify-content: space-between; /* Edit left, Delete right */
+    margin-top: 10px;
+}
+
+/* Edit button styling */
+.task-card .edit-btn {
     padding: 6px 12px;
     border-radius: 8px;
     border: none;
-    background: #fd79a8;
-    color: white;
     font-weight: bold;
     cursor: pointer;
+    background: #6c5ce7;
+    color: white;
     transition: background 0.3s, transform 0.3s;
 }
 
-#tasks-list .task-card button.delete-btn:hover {
+.task-card .edit-btn:hover {
+    background: #a29bfe;
+    transform: translateY(-2px);
+}
+
+/* Delete button styling */
+.task-card .delete-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    background: #fd79a8;
+    color: white;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.task-card .delete-btn:hover {
     background: #ff6b81;
     transform: translateY(-2px);
 }
+
 
 
         /* Features Section */
