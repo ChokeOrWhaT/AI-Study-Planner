@@ -1,7 +1,6 @@
 import subprocess
 import json
 
-
 def ask_mistral(question):
     ollama_path = r"C:\Users\Nihar Gunaji Sawant\AppData\Local\Programs\Ollama\ollama.exe"
 
@@ -9,16 +8,17 @@ def ask_mistral(question):
         [ollama_path, "run", "mistral", question],
         capture_output=True,
         text=True,
-        encoding="utf-8"   # Force UTF-8 decoding
+        encoding="utf-8"
     )
 
-    return process.stdout.strip()
+    output = process.stdout.strip()
 
+    # Try to parse as JSON if possible, otherwise return raw text
     try:
-        output = json.loads(process.stdout)
-        return output.get("completion", "")
+        parsed = json.loads(output)
+        return parsed.get("response") or parsed.get("completion") or output
     except json.JSONDecodeError:
-        return "Error: Could not parse response."
+        return output
 
 if __name__ == "__main__":
     print("Type 'exit' or 'quit' to stop.")

@@ -1,12 +1,12 @@
+# app.py
 from flask import Flask, render_template, request, jsonify
+from mistral import ask_mistral  # Keep your mistral.py as is
 import os
 import json
 from dotenv import load_dotenv
-
-# Gemini SDK
 import google.generativeai as genai
 
-# Load .env
+# Load environment variables
 load_dotenv()
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_KEY:
@@ -14,12 +14,33 @@ if not GEMINI_KEY:
 
 genai.configure(api_key=GEMINI_KEY)
 
+# Create Flask app
 app = Flask(__name__)
+
+# -----------------------
+# Routes
+# -----------------------
 
 # Home page
 @app.route("/")
-def home():
+def index():
     return render_template("index.html")
+
+# Chat endpoint: Mistral
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json()
+    user_message = data.get("message", "").strip()
+
+    if not user_message:
+        return jsonify({"reply": "Please type a message."})
+
+    try:
+        reply = ask_mistral(user_message)
+    except Exception as e:
+        reply = f"Error: {str(e)}"
+
+    return jsonify({"reply": reply})
 
 # Quiz endpoint: Gemini-generated questions
 @app.route("/quiz", methods=["POST"])
@@ -75,5 +96,8 @@ def generate_quiz():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+# -----------------------
+# Run app
+# -----------------------
 if __name__ == "__main__":
     app.run(debug=True)

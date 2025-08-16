@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\Nihar Gunaji Sawant\OneDrive\ドキュメント\Programming\Projects\ai-study-planner\venv"
+VIRTUAL_ENV="C:\Users\Nihar Gunaji Sawant\OneDrive\ドキュメント\Programming\Projects\AIra\AI-Study-Planner\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
