@@ -33,24 +33,19 @@
         <!-- Header -->
         <header>
             <div class="logo-container">
-                <div class="logo-img">AI</div>
-                <div class="logo-text">AI<span>Study</span>Partner</div>
+                <div class="logo-img">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="AIra Logo">
+                </div>
+                <div class="logo-text"><span>AI</span>ra</div>
             </div>
+
             <nav class="nav-links">
                 <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="https://flask-study-notes.onrender.com/login">Notes</a>
-                <a href="{{ url_for('chat') }}">Chat</a>
-
-          
-
-
-                <a href="C:\Users\Nihar Gunaji Sawant\OneDrive\ドキュメント\Programming\Projects\AIra\AI-Study-Planner\templates\chat.html">Chat</a>
+                <a href="{{ url_for('notes_index') }}">Notes</a>
+                <a href="{{ url_for('dashboard') }}">Group Chat</a>
+                <a href="{{ url_for('login') }}" class="login-btn">Login</a>
             </nav>
-            <a href="#signup" class="cta-button">Get Started</a>
-            <div class="hamburger">
-                <i class="ph-list"></i>
-            </div>
+
         </header>
 
         <!-- Hero Section -->
@@ -66,108 +61,146 @@
 
         <!-- Study Schedule Section -->
         <section class="study-schedule-section">
-            <div class="study-schedule-container">
-                <h2>My Study Schedule</h2>
-                <div class="schedule-inputs">
-                    <input type="text" id="task-name" placeholder="Task Name">
-                    <input type="text" id="subject-name" placeholder="Subject Name">
-                    <input type="datetime-local" id="task-date">
-                    <button id="add-task-btn">Add Task</button>
+            <h2 class="section-title">My Study Schedule</h2>
+            <div class="study-schedule-wrapper">
+
+                <!-- Left: Main Container (takes more width) -->
+                <div class="study-schedule-container">
+                    <div class="schedule-inputs">
+                        <h2 class="title">Study Schedule</h2>
+                        <input type="text" id="task-name" placeholder="Task Name">
+                        <input type="text" id="subject-name" placeholder="Subject Name">
+                        <input type="datetime-local" id="task-date">
+                        <button id="add-task-btn">Add Task</button>
+                    </div>
+                    <div id="tasks-list"></div>
                 </div>
-                <div id="tasks-list"></div>
+
+                <!-- Right: Summary Box -->
+                <div class="study-summary">
+                    <img src="{{ url_for('static', filename='study.png') }}" alt="Study Icon" class="study-icon">
+                    <h3>Plan, Track, and Achieve Your Study Goals</h3>
+                    <p class="study-summary-text">
+                        Welcome! To add a task, start by entering the <strong>Task Name</strong>, select the
+                        <strong>Subject</strong>, and pick a <strong>Date & Time</strong>.
+                        Then click <strong>"Add Task"</strong> to create a card below.
+                        <br><br>
+                        Each task appears as a <strong>card</strong> with the task name, subject, and date/time. You can
+                        <strong>edit</strong> or <strong>delete</strong> tasks easily.
+                        <br><br>
+                        Use color-coded tasks to quickly see priorities. Just type, schedule, and let your study plan
+                        guide you to stay organized and productive every day!
+                    </p>
+                </div>
+
             </div>
         </section>
 
 
+<!-- Chatbot Section -->
+<section class="chatbot-section">
+    <h2 class="section-title">Ask Your Study Partner</h2>
+    <div class="chatbot-wrapper">
+        <!-- Left: Summary Box -->
+        <div class="chatbot-summary">
+            <img src="{{ url_for('static', filename='bot.png') }}" alt="Bot Icon" class="bot-icon">
+            <h3>Interact, Learn, and Get Instant Study Help</h3>
+            <p class="chatbot-summary-text">
+                Here you can type your questions about any subject, task, or topic. 
+                The chatbot responds in real-time to guide you through concepts, 
+                suggest study strategies, and help you organize your tasks. 
+                Simply type your question in the input field, hit <strong>Send</strong>, 
+                and watch your personal study assistant give precise and helpful answers.
+                <br><br>
+                <strong>Tip:</strong> Be clear and concise in your queries for faster and more accurate responses. 
+                Use this chat to clarify doubts, revise topics, or plan your study efficiently!
+            </p>
+        </div>
 
-
-        <!-- Chatbot Section -->
-        <section id="chatbot" class="chatbot-section">
-            <h2 class="section-title">Ask Your Study Partner</h2>
-            <div class="chatbot-container">
-                <div class="chat-window" id="chat-window">
-                    <!-- Messages will appear here -->
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Type your question..." />
-                    <button id="send-btn">Send</button>
-                </div>
+        <!-- Right: Chatbot Container -->
+        <div class="chatbot-container">
+            <h2 class="title">Study Partner</h2>
+            <div class="chat-window" id="chat-window">
+                <!-- Messages will appear here -->
             </div>
-        </section>
-
-
-
-        <!-- ===== AI Quiz Section ===== -->
-<section id="quiz" class="quiz-section">
-  <h2 class="section-title">AI Quick Quiz</h2>
-
-  <div class="quiz-container">
-    <!-- Setup: topic & generate -->
-    <div class="quiz-setup">
-      <input
-        id="quiz-topic"
-        type="text"
-        placeholder="Enter a topic (e.g., Photosynthesis)"
-        aria-label="Quiz topic"
-      />
-
-      <select id="quiz-difficulty" aria-label="Difficulty">
-        <option value="auto" selected>Difficulty: Auto</option>
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-      </select>
-
-      <button id="quiz-generate" class="cta-button">Generate 5 Questions</button>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type your question..." />
+                <button id="send-btn">Send</button>
+            </div>
+        </div>
     </div>
-
-    <!-- Loader -->
-    <div id="quiz-loader" class="quiz-loader" hidden>
-      <div class="spinner"></div>
-      <span>Generating quiz…</span>
-    </div>
-
-    <!-- Quiz Card -->
-    <div id="quiz-card" class="quiz-card" hidden>
-      <div class="quiz-meta">
-        <span id="quiz-progress">Q 1/5</span>
-        <span id="quiz-score">Score: 0</span>
-      </div>
-
-      <h3 id="quiz-question" class="quiz-question">Question text goes here</h3>
-
-      <div id="quiz-options" class="quiz-options" role="radiogroup" aria-label="Answer choices">
-        <!-- Options injected here as radio buttons -->
-      </div>
-
-      <div class="quiz-actions">
-        <button id="quiz-submit" class="cta-button">Submit Answer</button>
-        <button id="quiz-next" class="cta-button" disabled>Next</button>
-      </div>
-
-      <div id="quiz-feedback" class="quiz-feedback" hidden>
-        <!-- Correct/incorrect + brief explanation -->
-      </div>
-    </div>
-
-    <!-- Results -->
-    <div id="quiz-result" class="quiz-result" hidden>
-      <h3 id="quiz-result-title">Great job!</h3>
-      <p id="quiz-result-summary">You scored 5/5.</p>
-      <button id="quiz-retry" class="cta-button">Try Another Topic</button>
-    </div>
-
-    <!-- Error -->
-    <div id="quiz-error" class="quiz-error" hidden>
-      <p>Something went wrong generating your quiz. Please try again.</p>
-    </div>
-  </div>
 </section>
 
 
 
+<section id="quiz" class="quiz-section">
+    <h2 class="section-title">AI Quick Quiz</h2>
 
-<!-- Features Section -->
+    <div class="quiz-wrapper">
+        <!-- Quiz Generator -->
+        <div class="quiz-container">
+            <h2 class="title">Quiz Generator</h2>
+            <div class="quiz-setup">
+                <input id="quiz-topic" type="text" placeholder="Enter a topic (e.g., Photosynthesis)" />
+                <select id="quiz-difficulty">
+                    <option value="auto" selected>Difficulty: Auto</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <button id="quiz-generate" class="cta-button">Generate 5 Questions</button>
+            </div>
+
+            <!-- Loader -->
+            <div id="quiz-loader" class="quiz-loader" hidden>
+                <div class="spinner"></div>
+                <span>Generating quiz…</span>
+            </div>
+
+            <!-- Quiz Card -->
+            <div id="quiz-card" class="quiz-card" hidden>
+                <div class="quiz-meta">
+                    <span id="quiz-progress">Q 1/5</span>
+                    <span id="quiz-score">Score: 0</span>
+                </div>
+                <h3 id="quiz-question" class="quiz-question">Question text goes here</h3>
+                <div id="quiz-options" class="quiz-options"></div>
+                <div class="quiz-actions">
+                    <button id="quiz-submit" class="cta-button">Submit Answer</button>
+                    <button id="quiz-next" class="cta-button" disabled>Next</button>
+                </div>
+                <div id="quiz-feedback" class="quiz-feedback" hidden></div>
+            </div>
+
+            <!-- Result -->
+            <div id="quiz-result" class="quiz-result" hidden>
+                <h3 id="quiz-result-title">Great job!</h3>
+                <p id="quiz-result-summary">You scored 5/5.</p>
+                <button id="quiz-retry" class="cta-button">Try Another Topic</button>
+            </div>
+
+            <!-- Error -->
+            <div id="quiz-error" class="quiz-error" hidden>
+                <p>Something went wrong generating your quiz. Please try again.</p>
+            </div>
+        </div>
+
+        <!-- Summary Box -->
+        <div class="quiz-summary">
+            <img src="{{ url_for('static', filename='quiz.png') }}" alt="Quiz Image" class="quiz-icon">
+            <h3>Boost Your Knowledge!</h3>
+            <p>
+                Take quick AI-powered quizzes on any topic. Test your memory, learn efficiently, 
+                and track your score to see progress. These interactive quizzes are designed to 
+                challenge your brain while keeping learning fun and engaging.
+            </p>
+        </div>
+    </div>
+</section>
+
+
+
+        <!-- Features Section -->
         <!-- Features Section -->
         <section id="features" class="features">
             <h2 class="section-title">Key Features</h2>
@@ -175,37 +208,43 @@
                 <div class="feature-card bevel-effect card-3d">
                     <div class="feature-icon floating">📚</div>
                     <h3 class="feature-title">Flexible Scheduling</h3>
-                    <p class="feature-description">Plan and manage your study or group sessions with an easy-to-use scheduler, tailored to your timeline.</p>
+                    <p class="feature-description">Plan and manage your study or group sessions with an easy-to-use
+                        scheduler, tailored to your timeline.</p>
                 </div>
-                
+
                 <div class="feature-card bevel-effect card-3d">
                     <div class="feature-icon floating">⏱️</div>
                     <h3 class="feature-title">Collaborative ChatGroups</h3>
-                    <p class="feature-description">Connect with peers in real-time chat groups to discuss, share ideas, and work together seamlessly.</p>
+                    <p class="feature-description">Connect with peers in real-time chat groups to discuss, share ideas,
+                        and work together seamlessly.</p>
                 </div>
-                
+
                 <div class="feature-card bevel-effect card-3d">
                     <div class="feature-icon floating">🧠</div>
                     <h3 class="feature-title">Organized Notes</h3>
-                    <p class="feature-description">Keep all your learning materials in one place with a notes system designed for easy access and review.</p>
+                    <p class="feature-description">Keep all your learning materials in one place with a notes system
+                        designed for easy access and review.</p>
                 </div>
-                
+
                 <div class="feature-card bevel-effect card-3d">
                     <div class="feature-icon floating">📊</div>
                     <h3 class="feature-title">Smart AI Chatbot</h3>
-                    <p class="feature-description">Get instant, accurate answers to your questions with an AI chatbot that adapts to your needs.</p>
+                    <p class="feature-description">Get instant, accurate answers to your questions with an AI chatbot
+                        that adapts to your needs.</p>
                 </div>
-                
+
                 <div class="feature-card bevel-effect card-3d">
                     <div class="feature-icon floating">💬</div>
                     <h3 class="feature-title">Interactive Quiz Generator</h3>
-                    <p class="feature-description">Create and take customized quizzes to test your knowledge and reinforce learning across any subject.</p>
+                    <p class="feature-description">Create and take customized quizzes to test your knowledge and
+                        reinforce learning across any subject.</p>
                 </div>
-                
+
                 <div class="feature-card bevel-effect card-3d">
                     <div class="feature-icon floating">🌐</div>
                     <h3 class="feature-title">Multi-Subject Support</h3>
-                    <p class="feature-description">Comprehensive coverage across STEM, humanities, and professional subjects.</p>
+                    <p class="feature-description">Comprehensive coverage across STEM, humanities, and professional
+                        subjects.</p>
                 </div>
             </div>
         </section>

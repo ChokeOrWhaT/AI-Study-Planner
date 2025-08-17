@@ -106,20 +106,20 @@ function sendMessage() {
     chatWindow.appendChild(thinkingMsg);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 
-    fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-    })
-    .then(res => res.json())
-    .then(data => {
-        thinkingMsg.innerHTML = `<p>${data.reply}</p>`;
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    })
-    .catch(err => {
-        thinkingMsg.innerHTML = `<p>Error: Could not connect to server.</p>`;
-        console.error(err);
-    });
+    fetch("/chat_ai", {   // <-- change /chat to /chat_ai
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message })
+})
+.then(res => res.json())
+.then(data => {
+    thinkingMsg.innerHTML = `<p>${data.reply}</p>`;
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+})
+.catch(err => {
+    thinkingMsg.innerHTML = `<p>Error: Could not connect to server.</p>`;
+    console.error(err);
+});
 }
 
 sendBtn.addEventListener("click", sendMessage);
@@ -267,21 +267,24 @@ window.addEventListener("DOMContentLoaded", () => {
   let score = 0;
   let chosen = null;
 
-  function showLoader(on) {
-    loader.hidden = !on;
-    card.hidden = on;
+  /* ===== Loader Control ===== */
+  function showLoader(show) {
+    loader.hidden = !show; // only visible when fetching
+    card.hidden = show;    // hide card while loading
     result.hidden = true;
     errorBox.hidden = true;
   }
 
+  /* ===== Error Display ===== */
   function showError(msg) {
     errorBox.hidden = false;
     errorBox.querySelector("p").textContent = msg || "Something went wrong.";
     showLoader(false);
   }
 
+  /* ===== Fetch Quiz from Server ===== */
   async function fetchQuiz(topic, difficulty) {
-    showLoader(true);
+    showLoader(true); // show loader while fetching
     try {
       const res = await fetch("/quiz", {
         method: "POST",
@@ -292,16 +295,18 @@ window.addEventListener("DOMContentLoaded", () => {
       if (!data.ok) throw new Error(data.error || "Quiz generation failed");
       return data.questions;
     } catch (err) {
+      showError(err.message || "Could not generate quiz.");
       throw err;
     } finally {
-      showLoader(false);
+      showLoader(false); // hide loader after fetch
     }
   }
 
+  /* ===== Render Quiz Question ===== */
   function renderQuestion(i) {
     chosen = null;
     const q = questions[i];
-    quizProgress.textContent = `Q ${i+1}/${questions.length}`;
+    quizProgress.textContent = `Q ${i + 1}/${questions.length}`;
     quizScore.textContent = `Score: ${score}`;
     quizQuestion.textContent = q.question;
     quizOptions.innerHTML = "";
@@ -318,20 +323,37 @@ window.addEventListener("DOMContentLoaded", () => {
         <input type="radio" name="quiz-opt" id="${id}" data-index="${j}">
         <span class="opt-text">${opt}</span>
       `;
-      wrapper.querySelector("input").addEventListener("change", (e) => {
+      wrapper.style.display = "flex";
+      wrapper.style.alignItems = "center";
+      wrapper.style.padding = "10px 12px";
+      wrapper.style.marginBottom = "10px";
+      wrapper.style.borderRadius = "10px";
+      wrapper.style.background = "rgba(255,255,255,0.02)";
+      wrapper.style.border = "1px solid rgba(255,255,255,0.03)";
+      wrapper.style.cursor = "pointer";
+
+      const input = wrapper.querySelector("input");
+      input.style.accentColor = "rgba(108,92,231,0.95)";
+      input.addEventListener("change", (e) => {
         chosen = parseInt(e.target.dataset.index, 10);
       });
+
       quizOptions.appendChild(wrapper);
     });
+
+    // Add padding below options for spacing from buttons
+    quizOptions.style.marginBottom = "16px";
   }
 
+  /* ===== Feedback Display ===== */
   function showFeedback(isCorrect, explanation) {
     feedback.hidden = false;
-    feedback.innerHTML = isCorrect 
-      ? `<strong>Correct ✅</strong><div>${explanation}</div>` 
+    feedback.innerHTML = isCorrect
+      ? `<strong>Correct ✅</strong><div>${explanation}</div>`
       : `<strong>Incorrect ❌</strong><div>${explanation}</div>`;
   }
 
+  /* ===== Submit Answer ===== */
   submitBtn.addEventListener("click", () => {
     if (chosen === null) return alert("Select an answer first.");
     submitBtn.disabled = true;
@@ -343,6 +365,7 @@ window.addEventListener("DOMContentLoaded", () => {
     nextBtn.disabled = false;
   });
 
+  /* ===== Next Question ===== */
   nextBtn.addEventListener("click", () => {
     idx++;
     if (idx >= questions.length) {
@@ -368,8 +391,8 @@ window.addEventListener("DOMContentLoaded", () => {
     renderQuestion(idx);
   });
 
+  /* ===== Retry Quiz ===== */
   retryBtn.addEventListener("click", () => {
-    // reset UI
     questions = [];
     idx = 0;
     score = 0;
@@ -378,19 +401,24 @@ window.addEventListener("DOMContentLoaded", () => {
     result.hidden = true;
   });
 
+  /* ===== Generate Quiz ===== */
   genBtn.addEventListener("click", async () => {
     const topic = topicInput.value.trim();
     const difficulty = diffSelect.value || "auto";
-    if (!topic) return alert("Please enter a topic (e.g., Photosynthesis)");
+    if (!topic) return alert("Please enter a topic");
+
     try {
-      showLoader(true);
+      showLoader(true); // show loader
       questions = await fetchQuiz(topic, difficulty);
       if (!Array.isArray(questions) || questions.length !== 5) throw new Error("Bad quiz data");
-      idx = 0; score = 0; chosen = null;
+
+      idx = 0;
+      score = 0;
+      chosen = null;
       renderQuestion(0);
       card.hidden = false;
       feedback.hidden = true;
-      showLoader(false);
+      showLoader(false); // hide loader after quiz is ready
     } catch (err) {
       showLoader(false);
       showError(err.message || "Could not generate quiz.");
@@ -399,27 +427,3 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
 })();
-
-genBtn.addEventListener("click", async () => {
-    const topic = topicInput.value.trim();
-    const difficulty = diffSelect.value || "auto";
-    if (!topic) return alert("Please enter a topic (e.g., Photosynthesis)");
-
-    try {
-        showLoader(true); // show loader while fetching
-        questions = await fetchQuiz(topic, difficulty); // fetch quiz from server
-        if (!Array.isArray(questions) || questions.length !== 5) throw new Error("Bad quiz data");
-
-        idx = 0;
-        score = 0;
-        chosen = null;
-        renderQuestion(0);  // show first question
-        card.hidden = false;
-        feedback.hidden = true;
-    } catch (err) {
-        showError(err.message || "Could not generate quiz.");
-        console.error(err);
-    } finally {
-        showLoader(false); // hide loader after quiz appears or error
-    }
-});

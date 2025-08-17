@@ -1,3 +1,7 @@
+import os
+import uuid
+import json
+from datetime import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -6,129 +10,42 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import OperationalError
 from mistral import ask_mistral
 import google.generativeai as genai
-import os, json, uuid
-from datetime import datetime
 from dotenv import load_dotenv
 
-# Load environment variables
+# -----------------------
+# Environment setup
+# -----------------------
 load_dotenv()
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_KEY:
     raise RuntimeError("GEMINI_API_KEY not found in .env")
-
 genai.configure(api_key=GEMINI_KEY)
 
-# Create Flask app
+# -----------------------
+# Flask app setup
+# -----------------------
 app = Flask(__name__)
-
-# -----------------------
-# Routes
-# -----------------------
-
-# Home page
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-# Chat endpoint: Mistral
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.get_json()
-    user_message = data.get("message", "").strip()
-
-    if not user_message:
-        return jsonify({"reply": "Please type a message."})
-
-    try:
-        reply = ask_mistral(user_message)
-    except Exception as e:
-        reply = f"Error: {str(e)}"
-
-    return jsonify({"reply": reply})
-
-# Quiz endpoint: Gemini-generated questions
-@app.route("/quiz", methods=["POST"])
-def generate_quiz():
-    data = request.get_json() or {}
-    topic = data.get("topic", "").strip()
-    difficulty = data.get("difficulty", "auto").strip().lower()
-
-    if not topic:
-        return jsonify({"ok": False, "error": "Missing topic"}), 400
-
-    # Gemini prompt: strict JSON for 5 MCQs
-    prompt = f"""
-    You are an assistant that generates educational multiple-choice quizzes.
-    Produce exactly 5 questions on "{topic}".
-    Each question should include:
-      - "question": string
-      - "options": array of 4 strings
-      - "answer": index (0-3)
-      - "explanation": short string
-    Difficulty: {difficulty}
-    Output STRICT JSON: an array of 5 objects. Do NOT output anything else.
-    """
-
-    try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        resp = model.generate_content(prompt)
-        text = resp.text if hasattr(resp, "text") else str(resp)
-
-        # Parse JSON
-        try:
-            quiz = json.loads(text)
-        except Exception:
-            import re
-            m = re.search(r"(\[.*\])", text, flags=re.S)
-            if m:
-                quiz = json.loads(m.group(1))
-            else:
-                return jsonify({"ok": False, "error": "Could not parse model output as JSON", "raw": text}), 500
-
-        # Validate structure
-        if not isinstance(quiz, list) or len(quiz) != 5:
-            return jsonify({"ok": False, "error": "Model returned unexpected structure", "raw": text}), 500
-
-        for i, q in enumerate(quiz):
-            if not all(k in q for k in ("question","options","answer","explanation")):
-                return jsonify({"ok": False, "error": f"Question {i} missing fields", "raw": text}), 500
-            if not isinstance(q["options"], list) or len(q["options"]) < 4:
-                return jsonify({"ok": False, "error": f"Question {i} must have 4 options", "raw": text}), 500
-
-        return jsonify({"ok": True, "questions": quiz})
-
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
-
-# -----------------------
-# Run app
-# -----------------------
-if __name__ == "__main__":
-    app.run(debug=True)
-
-
-
 app.secret_key = "your_secret_key"  # Change to a secure key
 bcrypt = Bcrypt(app)
 socketio = SocketIO(app, cors_allowed_origins="http://localhost:5000")
-# --- File upload config ---
+
+# File upload config
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-ALLOWED_EXTENSIONS = {
-    "png", "jpg", "jpeg", "gif", "webp",
-    "pdf", "doc", "docx", "txt"
-}
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp", "pdf", "doc", "docx", "txt"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB limit
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB
 
-# --- Database config ---
+# Database config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///notes.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- Models ---
+# -----------------------
+# Models
+# -----------------------
 class User(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
@@ -163,7 +80,9 @@ class Message(db.Model):
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.String(30), nullable=False)
 
-# --- Helpers ---
+# -----------------------
+# Helpers
+# -----------------------
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -199,14 +118,18 @@ def init_db():
     except Exception as e:
         print("Error creating/upgrading database:", e)
 
-# --- Routes ---
+# -----------------------
+# Routes
+# -----------------------
 
-# Root route redirects to /code
-@app.route('/')
+# Home page (your index.html)
+@app.route("/")
 def index():
-    return redirect(url_for('code_page'))
+    return render_template("index.html")
 
-# Signup
+# -----------------------
+# Auth: Signup/Login/Logout
+# -----------------------
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -215,7 +138,6 @@ def signup():
         if not username or not password:
             flash("Username and password cannot be empty!", "error")
             return redirect(url_for('signup'))
-        
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         try:
             user = User(username=username, password=hashed_password)
@@ -227,10 +149,8 @@ def signup():
             db.session.rollback()
             flash('Username already taken.', 'error')
             return redirect(url_for('signup'))
-    
     return render_template('signup.html')
 
-# Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -240,13 +160,20 @@ def login():
         if user and bcrypt.check_password_hash(user.password, password):
             session['username'] = username
             flash('Logged in successfully!', 'success')
-            return redirect(url_for('code_page'))  # Redirect to code.html after login
+            return redirect(url_for('dashboard'))
         flash('Invalid username or password.', 'error')
         return redirect(url_for('login'))
-    
     return render_template('login.html')
 
-# Dashboard
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    flash('Logged out.', 'success')
+    return redirect(url_for('login'))
+
+# -----------------------
+# Dashboard & Groups
+# -----------------------
 @app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
@@ -257,16 +184,10 @@ def dashboard():
         session.pop('username', None)
         flash('User not found.', 'error')
         return redirect(url_for('login'))
-    
-    # Count user's created groups
     group_count = Group.query.filter_by(owner_id=user.id).count()
-    
-    # List joined groups
     groups = db.session.query(Group).join(GroupMember).filter(GroupMember.user_id == user.id).all()
-    
     return render_template('dashboard.html', username=session['username'], group_count=group_count, groups=groups)
 
-# Create group
 @app.route('/create_group', methods=['POST'])
 def create_group():
     if 'username' not in session:
@@ -277,26 +198,22 @@ def create_group():
         session.pop('username', None)
         flash('User not found.', 'error')
         return redirect(url_for('login'))
-    
     if Group.query.filter_by(owner_id=user.id).count() >= 4:
         flash('Max groups reached.', 'error')
         return redirect(url_for('dashboard'))
-    
     group_name = request.form.get('group_name', '').strip()
     if not group_name:
         flash('Group name cannot be empty.', 'error')
         return redirect(url_for('dashboard'))
-    
     uuid_link = str(uuid.uuid4())
     group = Group(name=group_name, owner_id=user.id, uuid_link=uuid_link, created_at=datetime.now().isoformat())
     db.session.add(group)
-    db.session.flush()  # Get group.id before commit
+    db.session.flush()
     db.session.add(GroupMember(user_id=user.id, group_id=group.id))
     db.session.commit()
     flash('Group created!', 'success')
     return redirect(url_for('dashboard'))
 
-# Join group via link
 @app.route('/join/<uuid_link>')
 def join(uuid_link):
     if 'username' not in session:
@@ -307,12 +224,10 @@ def join(uuid_link):
         session.pop('username', None)
         flash('User not found.', 'error')
         return redirect(url_for('login'))
-    
     group = Group.query.filter_by(uuid_link=uuid_link).first()
     if not group:
         flash('Invalid link.', 'error')
         return redirect(url_for('dashboard'))
-    
     existing_member = GroupMember.query.filter_by(user_id=user.id, group_id=group.id).first()
     if not existing_member:
         db.session.add(GroupMember(user_id=user.id, group_id=group.id))
@@ -320,7 +235,9 @@ def join(uuid_link):
         flash('Joined group!', 'success')
     return redirect(url_for('chat', group_id=group.id))
 
+# -----------------------
 # Chat room
+# -----------------------
 @app.route('/chat/<int:group_id>')
 def chat(group_id):
     if 'username' not in session:
@@ -331,24 +248,19 @@ def chat(group_id):
         session.pop('username', None)
         flash('User not found.', 'error')
         return redirect(url_for('login'))
-    
     member = GroupMember.query.filter_by(user_id=user.id, group_id=group_id).first()
     if not member:
         flash('Not a member.', 'error')
         return redirect(url_for('dashboard'))
-    
     group = Group.query.get_or_404(group_id)
     messages = db.session.query(Message, User.username).join(User, Message.user_id == User.id).filter(Message.group_id == group_id).order_by(Message.timestamp).all()
-    print(f"Rendering chat.html with group_id: {group_id}")  # Debug print
     return render_template('chat.html', group_name=group.name, group_id=group_id, messages=messages)
 
-# SocketIO: Join room
 @socketio.on('join')
 def on_join(data):
     group_id = data['group_id']
     join_room(str(group_id))
 
-# SocketIO: Send message
 @socketio.on('send_message')
 def on_message(data):
     if 'username' not in session:
@@ -359,21 +271,14 @@ def on_message(data):
     group_id = data['group_id']
     message_content = data['message']
     timestamp = datetime.now().isoformat()
-    
     message = Message(group_id=group_id, user_id=user.id, content=message_content, timestamp=timestamp)
     db.session.add(message)
     db.session.commit()
-    
     send({'username': session['username'], 'message': message_content}, to=str(group_id))
 
-# Logout
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    flash('Logged out.', 'success')
-    return redirect(url_for('login'))
-
-# Main Notes page (renamed to avoid endpoint conflict)
+# -----------------------
+# Notes system
+# -----------------------
 @app.route('/notes')
 def notes_index():
     if 'username' not in session:
@@ -384,16 +289,8 @@ def notes_index():
     except OperationalError:
         init_db()
         notes = []
-    return render_template('index.html', notes=notes)
+    return render_template('notes.html', notes=notes)
 
-# AI Study Partner (code.html) page
-@app.route('/code')
-def code_page():
-    if 'username' not in session:
-        return render_template('code.html')  # Allow access without login for landing page
-    return render_template('code.html')
-
-# Add Note (updated url_for to match new route name)
 @app.route('/add', methods=['POST'])
 def add_note():
     if 'username' not in session:
@@ -403,24 +300,20 @@ def add_note():
     content = request.form.get('content', '').strip()
     if not title or not content:
         flash("Title and content cannot be empty!", "error")
-        return redirect(url_for('notes_index'))  # Updated to notes_index
-
+        return redirect(url_for('notes_index'))
     file = request.files.get('attachment')
     filename = None
     if file and file.filename:
         if not allowed_file(file.filename):
             flash("Unsupported file type.", "error")
-            return redirect(url_for('notes_index'))  # Updated to notes_index
+            return redirect(url_for('notes_index'))
         filename = unique_filename(file.filename)
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        file.save(save_path)
-
+        file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
     db.session.add(Note(title=title, content=content, attachment=filename))
     db.session.commit()
     flash("Note added!", "success")
-    return redirect(url_for('notes_index'))  # Updated to notes_index
+    return redirect(url_for('notes_index'))
 
-# Edit Note (updated url_for to match new route name)
 @app.route('/edit/<int:id>', methods=['POST'])
 def edit_note(id):
     if 'username' not in session:
@@ -429,30 +322,25 @@ def edit_note(id):
     note = Note.query.get_or_404(id)
     new_title = request.form.get('title', '').strip()
     new_content = request.form.get('content', '').strip()
-
     if not new_title or not new_content:
         flash("Title and content cannot be empty!", "error")
-        return redirect(url_for('notes_index'))  # Updated to notes_index
-
+        return redirect(url_for('notes_index'))
     file = request.files.get('attachment')
     if file and file.filename:
         if not allowed_file(file.filename):
             flash("Unsupported file type.", "error")
-            return redirect(url_for('notes_index'))  # Updated to notes_index
+            return redirect(url_for('notes_index'))
         if note.attachment:
             delete_file_if_exists(note.attachment)
         filename = unique_filename(file.filename)
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        file.save(save_path)
+        file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
         note.attachment = filename
-
     note.title = new_title
     note.content = new_content
     db.session.commit()
     flash("Note updated!", "success")
-    return redirect(url_for('notes_index'))  # Updated to notes_index
+    return redirect(url_for('notes_index'))
 
-# Delete Note (updated url_for to match new route name)
 @app.route('/delete/<int:id>')
 def delete_note(id):
     if 'username' not in session:
@@ -464,10 +352,71 @@ def delete_note(id):
     db.session.delete(note)
     db.session.commit()
     flash("Note deleted!", "success")
-    return redirect(url_for('notes_index'))  # Updated to notes_index
+    return redirect(url_for('notes_index'))
 
-# --- Run ---
-# Update the run block
+# -----------------------
+# AI Chat (Mistral)
+# -----------------------
+@app.route("/chat_ai", methods=["POST"])
+def chat_ai():
+    data = request.get_json(silent=True)
+    user_message = (data.get("message") or "").strip()
+    if not user_message:
+        return jsonify({"reply": "Please type a message."}), 400
+    try:
+        reply = ask_mistral(user_message)
+    except Exception as e:
+        reply = f"Error: {str(e)}"
+    return jsonify({"reply": reply}), 200
+
+# -----------------------
+# Gemini Quiz
+# -----------------------
+@app.route("/quiz", methods=["POST"])
+def generate_quiz():
+    data = request.get_json() or {}
+    topic = data.get("topic", "").strip()
+    difficulty = data.get("difficulty", "auto").strip().lower()
+    if not topic:
+        return jsonify({"ok": False, "error": "Missing topic"}), 400
+    prompt = f"""
+    You are an assistant that generates educational multiple-choice quizzes.
+    Produce exactly 5 questions on "{topic}".
+    Each question should include:
+      - "question": string
+      - "options": array of 4 strings
+      - "answer": index (0-3)
+      - "explanation": short string
+    Difficulty: {difficulty}
+    Output STRICT JSON: an array of 5 objects. Do NOT output anything else.
+    """
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        resp = model.generate_content(prompt)
+        text = resp.text if hasattr(resp, "text") else str(resp)
+        try:
+            quiz = json.loads(text)
+        except Exception:
+            import re
+            m = re.search(r"(\[.*\])", text, flags=re.S)
+            if m:
+                quiz = json.loads(m.group(1))
+            else:
+                return jsonify({"ok": False, "error": "Could not parse model output as JSON", "raw": text}), 500
+        if not isinstance(quiz, list) or len(quiz) != 5:
+            return jsonify({"ok": False, "error": "Model returned unexpected structure", "raw": text}), 500
+        for i, q in enumerate(quiz):
+            if not all(k in q for k in ("question","options","answer","explanation")):
+                return jsonify({"ok": False, "error": f"Question {i} missing fields", "raw": text}), 500
+            if not isinstance(q["options"], list) or len(q["options"]) < 4:
+                return jsonify({"ok": False, "error": f"Question {i} must have 4 options", "raw": text}), 500
+        return jsonify({"ok": True, "questions": quiz})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+# -----------------------
+# Run
+# -----------------------
 if __name__ == '__main__':
     with app.app_context():
         init_db()

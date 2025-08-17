@@ -112,15 +112,25 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: linear-gradient(45deg, var(--primary), var(--accent));
+            /* Dark gray gradient background */
+            background: linear-gradient(45deg, #4a4a4a, #2c2c2c);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1.2rem;
-            box-shadow: 0 0 20px rgba(108, 92, 231, 0.5);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            /* ensures image fits within circle */
         }
+
+
+        .logo-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* ensures the image covers the div nicely */
+            display: block;
+        }
+
 
         .logo-text {
             font-size: 1.5rem;
@@ -160,6 +170,67 @@
         .nav-links a:hover:after {
             width: 100%;
         }
+
+        /* Login button */
+        /* Login button - fully isolated with animated glow */
+        .nav-links a.login-btn {
+            all: unset;
+            /* remove inherited styles */
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 0.5rem 1.4rem;
+            border-radius: 25px;
+
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+            font-weight: 600;
+
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none !important;
+
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+            transition: all 0.5s ease;
+            position: relative;
+            transform: none !important;
+        }
+
+        /* Remove global :after underline */
+        .nav-links a.login-btn::after {
+            content: none !important;
+        }
+
+        /* Hover effect with animated glow */
+        .nav-links a.login-btn:hover {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            box-shadow: 0 0 20px 5px rgba(108, 92, 231, 0.5), 0 6px 20px rgba(108, 92, 231, 0.4);
+            color: white !important;
+            transform: none !important;
+        }
+
+        /* Optional: soft pulsing glow animation */
+        @keyframes glowPulse {
+            0% {
+                box-shadow: 0 0 15px 0 rgba(108, 92, 231, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 25px 5px rgba(108, 92, 231, 0.5);
+            }
+
+            100% {
+                box-shadow: 0 0 15px 0 rgba(108, 92, 231, 0.3);
+            }
+        }
+
+        .nav-links a.login-btn:hover {
+            animation: glowPulse 1.2s infinite alternate;
+        }
+
+
 
         .cta-button {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
@@ -208,7 +279,7 @@
         /* Hero Section */
         .hero {
             position: relative;
-            height: 100vh;
+            height: 90vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -256,184 +327,10 @@
         }
 
 
-
-/* ---------------- Study Schedule Section ---------------- */
-.study-schedule-section {
-    padding: 60px 20px;
-    text-align: center;
-    background: linear-gradient(145deg, #1e1e2f, #2a2a40);
-    border-top: 2px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Main container perfectly centered */
-.study-schedule-container {
-    max-width: 600px;
-    margin: 0 auto; /* ✅ centers horizontally */
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 25px; /* vertical spacing between Add Task section and task cards */
-}
-
-/* Inputs section matching card width */
-.schedule-inputs {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-    margin-bottom: 40px;
-}
-
-.schedule-inputs input {
-    width: 100%;
-    max-width: 500px;
-    padding: 12px 15px;
-    border-radius: 10px;
-    border: none;
-    outline: none;
-    font-size: 1rem;
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    backdrop-filter: blur(8px);
-}
-
-.schedule-inputs button {
-    width: auto;
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    background: #6c5ce7;
-    color: white;
-    transition: background 0.3s, transform 0.3s;
-}
-
-.schedule-inputs button:hover {
-    background: #a29bfe;
-    transform: translateY(-2px);
-}
-
-
-/* Task cards list */
-#tasks-list {
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Center the cards container */
-    gap: 15px; /* Vertical spacing between cards */
-}
-
-/* Task card styling */
-#tasks-list .task-card {
-    width: 100%;
-    max-width: 1000px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 15px;
-    padding: 15px 20px;
-    color: #f5f6fa;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    text-align: left;
-    transition: transform 0.3s, box-shadow 0.3s;
-    position: relative;
-}
-
-#tasks-list .task-card.completed h3,
-#tasks-list .task-card.completed p {
-    text-decoration: line-through;
-    opacity: 0.7;
-}
-
-#tasks-list .task-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
-}
-
-#tasks-list .task-card h3,
-#tasks-list .task-card p {
-    margin-bottom: 5px;
-}
-
-/* Delete button styling */
-#tasks-list .task-card button.delete-btn,
-#tasks-list .task-card button.edit-btn {
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: none;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.3s;
-}
-
-#tasks-list .task-card button.delete-btn {
-    background: #fd79a8;
-    align-self: flex-end;
-}
-
-#tasks-list .task-card button.delete-btn:hover {
-    background: #ff6b81;
-    transform: translateY(-2px);
-}
-
-#tasks-list .task-card button.edit-btn {
-    background: #6c5ce7;
-    align-self: flex-start;
-}
-
-#tasks-list .task-card button.edit-btn:hover {
-    background: #a29bfe;
-    transform: translateY(-2px);
-}
-
-/* Glassy checkbox on top-right of task card */
-#tasks-list .task-card .complete-checkbox {
-    position: absolute;
-    top: 15px;
-    right: 15px; /* move to top-right */
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    -webkit-appearance: none; /* remove default style */
-    appearance: none;
-    background: rgba(255, 255, 255, 0.1); /* glassy transparent background */
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 5px;
-    transition: background 0.3s, border 0.3s;
-    outline: none;
-}
-
-/* Tick style for checked state */
-#tasks-list .task-card .complete-checkbox:checked {
-    background: rgba(108, 92, 231, 0.8); /* matches your theme / purple accent */
-    border-color: rgba(108, 92, 231, 0.8);
-}
-
-/* Optional: add tick symbol using pseudo-element */
-#tasks-list .task-card .complete-checkbox:checked::after {
-    content: "✓";
-    display: block;
-    text-align: center;
-    color: white; /* white tick on purple background */
-    font-size: 14px;
-    line-height: 20px;
-}
-
-
-
-
-/* Features Section */
+        /* Features Section */
         .features {
             padding: 8rem 5%;
+           
         }
 
         .section-title {
@@ -480,11 +377,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(
-                135deg,
-                rgba(255, 255, 255, 0.05) 0%,
-                rgba(255, 255, 255, 0) 60%
-            );
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.05) 0%,
+                    rgba(255, 255, 255, 0) 60%);
             pointer-events: none;
         }
 
@@ -509,28 +404,30 @@
         }
 
         .features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    align-items: start;   /* ✅ align all cards by top */
-}
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            align-items: start;
+            /* ✅ align all cards by top */
+        }
 
-.feature-card {
-    background: var(--glass);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 2.5rem;
-    transition: var(--transition);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
+        .feature-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            transition: var(--transition);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    min-height: 100%;      /* ✅ ensures equal height in row */
-}
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-height: 100%;
+            /* ✅ ensures equal height in row */
+        }
 
         /* Footer */
         footer {
@@ -538,6 +435,7 @@
             backdrop-filter: blur(10px);
             border-top: 1px solid var(--glass-border);
             padding: 3rem 5%;
+            margin-top: 80px;
         }
 
         .footer-content {
@@ -670,17 +568,377 @@
             transform: perspective(1000px) rotateX(5deg) rotateY(5deg) translateZ(10px);
         }
 
+
+        /* ---------------- Study Schedule Section ---------------- */
+        .study-schedule-section {
+            padding: 80px 20px;
+            /* more top padding */
+            margin-top: 80px;
+            text-align: center;
+            background: linear-gradient(145deg, #1e1e2f, #2a2a40);
+            border-top: 2px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        /* Wrapper for side-by-side layout */
+        .study-schedule-wrapper {
+            display: flex;
+            gap: 60px;
+            align-items: center;
+            /* vertical center for summary */
+            max-width: 1400px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        /* Main Container - wider */
+        .study-schedule-container {
+            flex: 1.6;
+            min-width: 700px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* Inputs Section */
+        .schedule-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .schedule-inputs input {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s;
+        }
+
+        .schedule-inputs input:focus {
+            background: rgba(108, 92, 231, 0.2);
+            box-shadow: 0 0 8px rgba(108, 92, 231, 0.5);
+        }
+
+        .schedule-inputs button {
+            width: auto;
+            padding: 12px 20px;
+            /* more top/bottom padding */
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: #6c5ce7;
+            color: white;
+            margin-top: 20px;
+            /* extra space above button */
+            transition: all 0.3s;
+        }
+
+        .schedule-inputs button:hover {
+            background: #a29bfe;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .study-schedule-container .title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 50px;
+            text-align: left;
+        }
+
+        /* Feature Summary Box */
+        .study-summary {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            padding: 40px 25px 25px 25px;
+            /* more top padding for image */
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            color: #ffffffcc;
+            text-align: left;
+            position: relative;
+            /* for image positioning */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* vertically center content */
+            gap: 15px;
+        }
+
+        /* Summary Title & Paragraph */
+        .study-summary h3 {
+            font-size: 1.6rem;
+            margin-top: 60px;
+            /* space from top for image */
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .study-summary .study-summary-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #ffffffcc;
+        }
+
+        /* Study Icon inside Summary */
+        .study-summary .study-icon {
+            position: absolute;
+            top: 0px;
+            /* shift down slightly */
+            left: -20px;
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            transform: rotate(-15deg);
+            z-index: 0;
+            opacity: 0.7;
+        }
+
+        /* Responsive layout for smaller screens */
+        @media (max-width: 900px) {
+            .study-schedule-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .study-schedule-container,
+            .study-summary {
+                width: 100%;
+                max-width: 600px;
+            }
+        }
+
+        .study-summary .study-summary-text {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #ffffffcc;
+            margin-top: 10px;
+        }
+
+
+
+
+
+        /* Task cards list */
+        #tasks-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Center the cards container */
+            gap: 15px;
+            /* Vertical spacing between cards */
+        }
+
+        /* Task card styling */
+        #tasks-list .task-card {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px 20px;
+            color: #f5f6fa;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        #tasks-list .task-card.completed h3,
+        #tasks-list .task-card.completed p {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        #tasks-list .task-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
+        }
+
+        #tasks-list .task-card h3,
+        #tasks-list .task-card p {
+            margin-bottom: 5px;
+        }
+
+        /* Delete button styling */
+        #tasks-list .task-card button.delete-btn,
+        #tasks-list .task-card button.edit-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        #tasks-list .task-card button.delete-btn {
+            background: #fd79a8;
+            align-self: flex-end;
+        }
+
+        #tasks-list .task-card button.delete-btn:hover {
+            background: #ff6b81;
+            transform: translateY(-2px);
+        }
+
+        #tasks-list .task-card button.edit-btn {
+            background: #6c5ce7;
+            align-self: flex-start;
+        }
+
+        #tasks-list .task-card button.edit-btn:hover {
+            background: #a29bfe;
+            transform: translateY(-2px);
+        }
+
+        /* Glassy checkbox on top-right of task card */
+        #tasks-list .task-card .complete-checkbox {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            /* move to top-right */
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            /* remove default style */
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            /* glassy transparent background */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            transition: background 0.3s, border 0.3s;
+            outline: none;
+        }
+
+        /* Tick style for checked state */
+        #tasks-list .task-card .complete-checkbox:checked {
+            background: rgba(108, 92, 231, 0.8);
+            /* matches your theme / purple accent */
+            border-color: rgba(108, 92, 231, 0.8);
+        }
+
+        /* Optional: add tick symbol using pseudo-element */
+        #tasks-list .task-card .complete-checkbox:checked::after {
+            content: "✓";
+            display: block;
+            text-align: center;
+            color: white;
+            /* white tick on purple background */
+            font-size: 14px;
+            line-height: 20px;
+        }
+
+        #tasks-list .task-card,
+        #tasks-list .task-card button {
+            transition: all 0.3s ease-in-out;
+        }
+
+
+
+
+
         /* Chatbot Section */
+        /* ---------------- Chatbot Section ---------------- */
         .chatbot-section {
-            padding: 60px 20px;
+            padding: 80px 20px;
+            margin-top: 80px;
+            /* gap from previous section */
             text-align: center;
             background: linear-gradient(145deg, #1e1e2f, #2a2a40);
             border-top: 2px solid rgba(255, 255, 255, 0.05);
         }
 
+        /* Wrapper for side-by-side layout */
+        .chatbot-wrapper {
+            display: flex;
+            gap: 60px;
+            align-items: center;
+            /* vertical center */
+            max-width: 1400px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        /* Summary Box - Left */
+        .chatbot-summary {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            padding: 40px 25px 25px 25px;
+            /* more top padding for icon */
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            color: #ffffffcc;
+            text-align: left;
+            position: relative;
+            /* for icon positioning */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Summary Title & Paragraph */
+        .chatbot-summary h3 {
+            font-size: 1.6rem;
+            margin-top: 60px;
+            /* space for icon */
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .chatbot-summary .chatbot-summary-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #ffffffcc;
+        }
+
+        /* Bot Icon inside Summary */
+        .chatbot-summary .bot-icon {
+            position: absolute;
+            top: 0px;
+            /* slightly down if needed */
+            left: -20px;
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+
+            z-index: 0;
+            opacity: 0.7;
+        }
+
+        /* Chatbot Container - Right */
         .chatbot-container {
-            max-width: 600px;
-            margin: 30px auto 0;
+            flex: 1.6;
+            min-width: 700px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
@@ -691,6 +949,7 @@
             overflow: hidden;
         }
 
+        /* Chat Window */
         .chat-window {
             flex: 1;
             padding: 15px;
@@ -700,6 +959,7 @@
             text-align: left;
         }
 
+        /* Messages */
         .chat-message {
             margin: 8px 0;
             padding: 10px 14px;
@@ -720,6 +980,7 @@
             align-self: flex-start;
         }
 
+        /* Chat Input Area */
         .chat-input-area {
             display: flex;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -749,226 +1010,235 @@
         .chat-input-area button:hover {
             background-color: #a29bfe;
         }
-        /* Chatbot Input Styles */
-.chatbot-input input {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 10px;
-    outline: none;
-    font-size: 14px;
 
-    /* Glass effect */
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(8px);
-    color: white;
+        /* Responsive layout for smaller screens */
+        @media (max-width: 900px) {
+            .chatbot-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
 
-    /* Keep same look when focused */
-    transition: background 0.2s ease;
-}
-
-.chatbot-input input:focus {
-    background: rgba(255, 255, 255, 0.15); /* same as normal */
-    outline: none;
-    color: white;
-}
-
-.chatbot-input input::placeholder {
-    color: rgba(255, 255, 255, 0.7);
-}
+            .chatbot-container,
+            .chatbot-summary {
+                width: 100%;
+                max-width: 600px;
+            }
+        }
 
 
 
-/* ===== AI Quiz: Glassy Container Theme ===== */
-.quiz-section {
-  padding: 60px 20px;
-  text-align: center;
-  background: linear-gradient(145deg,#1e1e2f,#2a2a40);
-  border-top: 2px solid rgba(255,255,255,0.05);
+
+        /* ---------------- AI Quiz Section ---------------- */
+
+        .quiz-section {
+            padding: 80px 20px;
+            margin-top: 80px;
+            text-align: center;
+            background: linear-gradient(145deg, #1e1e2f, #2a2a40);
+            border-top: 2px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .quiz-wrapper {
+            display: flex;
+            gap: 60px;
+            align-items: flex-start;
+            max-width: 1400px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .quiz-container {
+            flex: 1.6;
+            min-width: 700px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .quiz-setup {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .quiz-setup input[type="text"],
+        .quiz-setup select {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: #f5f6fa;
+        }
+
+        .quiz-setup select option {
+            background-color: #2a2a40;
+            color: #f5f6fa;
+        }
+
+        .cta-button {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: #6c5ce7;
+            color: white;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .cta-button:hover {
+            background: #a29bfe;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .quiz-loader {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            color: #f5f6fa;
+        }
+
+        .quiz-loader .spinner {
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255, 255, 255, 0.12);
+            border-top-color: #6c5ce7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .quiz-loader span {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .quiz-card {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+
+        .quiz-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #f5f6fa;
+            font-weight: bold;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .quiz-option input[type="radio"] {
+            display: none;
+        }
+        .quiz-options {
+    margin-bottom: 30px; /* gives more space below options */
 }
 
-.quiz-container {
-  max-width: 600px;
-  margin: 0 auto;
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 28px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: center;
-}
-
-/* Setup row: input + dropdown + button */
-.quiz-setup {
-  width: 100%;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-}
-
-.quiz-setup input[type="text"],
-.quiz-setup select {
-  width: 100%;
-  max-width: 360px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255,255,255,0.08);
-  color: #f5f6fa;
-  outline: none;
-  font-size: 0.95rem;
-}
-
-/* Dropdown arrow customization */
-.quiz-setup select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='20,50 70,100 120,50' stroke='white' stroke-width='15' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
-  cursor: pointer;
-}
-
-/* Button */
-.quiz-setup .cta-button {
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 700;
-  background: rgba(108,92,231,0.85);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.quiz-setup .cta-button:hover {
-  background: rgba(108,92,231,1);
-}
-
-/* Loader */
-.quiz-loader {
-  display:flex;
-  gap:12px;
-  align-items:center;
-  color: #f5f6fa;
-}
-.quiz-loader .spinner{
-  width:18px;
-  height:18px;
-  border:3px solid rgba(255,255,255,0.12);
-  border-top-color: rgba(108,92,231,0.9);
-  border-radius:50%;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* Quiz card */
-.quiz-card {
-  width:100%;
-  max-width:560px;
-  background: rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.06);
-  border-radius:12px;
-  padding:18px;
-  color:#f5f6fa;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  position:relative;
-}
-
-/* Meta row */
-.quiz-meta {
-  display:flex;
-  justify-content:space-between;
-  font-weight:600;
-  color:rgba(245,246,250,0.9);
-}
-
-/* Question */
-.quiz-question {
-  font-size:1.05rem;
-  line-height:1.3;
-  margin:0;
-  text-align:left;
-}
-
-/* Options: radio-style list */
-.quiz-options {
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.quiz-option {
-  display:flex;
-  gap:10px;
-  align-items:center;
-  padding:10px 12px;
-  border-radius:10px;
-  background: rgba(255,255,255,0.02);
-  border:1px solid rgba(255,255,255,0.03);
-  cursor:pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
-}
-.quiz-option:hover {
-  background: rgba(108,92,231,0.1);
-  transform: translateY(-1px);
-}
-.quiz-option input[type="radio"]{
-  accent-color: rgba(108,92,231,0.95);
-  transform: scale(1.05);
-}
-
-/* Actions */
 .quiz-actions {
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-}
-.quiz-actions .cta-button {
-  padding:8px 14px;
-  border-radius:8px;
+    display: flex;
+    gap: 25px; /* space between Submit and Next buttons */
+    justify-content: flex-end;
+    margin-top: 10px; /* optional: space above buttons */
 }
 
-/* Feedback text */
-.quiz-feedback {
-  background: rgba(255,255,255,0.02);
-  border:1px solid rgba(255,255,255,0.04);
-  padding:12px;
-  border-radius:8px;
-  text-align:left;
-  color:#f5f6fa;
-}
+        .quiz-option .opt-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
 
-/* Result card */
-.quiz-result {
-  width:100%;
-  max-width:560px;
-  background: rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.06);
-  border-radius:12px;
-  padding:20px;
-  color:#f5f6fa;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-  text-align:center;
-}
+        .quiz-option input[type="radio"]:checked+.opt-text {
+            background: rgba(108, 92, 231, 0.2);
+            border-color: #6c5ce7;
+        }
 
-/* Error */
-.quiz-error { 
-  color:#ffb3c6; 
-  font-weight:600;
-}
+        .quiz-feedback {
+            margin-top: 10px;
+            color: #f5f6fa;
+            font-weight: bold;
+        }
 
-/* Responsive */
-@media (max-width:768px){
-  .quiz-container { margin: 0 6%; }
-  .quiz-setup input, .quiz-setup select { max-width: 100%; }
-}
+        .quiz-result,
+        .quiz-error {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            color: #f5f6fa;
+            margin-top: 20px;
+        }
+
+        .quiz-summary {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            padding: 40px 25px 25px 25px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            color: #ffffffcc;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .quiz-summary img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 900px) {
+            .quiz-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .quiz-container,
+            .quiz-summary {
+                width: 100%;
+                max-width: 600px;
+            }
+        }
+
+  
