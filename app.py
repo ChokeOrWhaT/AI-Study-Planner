@@ -1,39 +1,40 @@
 import os
 import uuid
 import json
+import random
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_socketio import SocketIO, join_room, leave_room, send
+# removed flask_socketio (group chat removed)
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import OperationalError
 from mistral import ask_mistral
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# -----------------------
+
+# =====================================================
 # Environment setup
-# -----------------------
+# =====================================================
 load_dotenv()
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_KEY:
     raise RuntimeError("GEMINI_API_KEY not found in .env")
 genai.configure(api_key=GEMINI_KEY)
 
-# -----------------------
+# =====================================================
 # Flask app setup
-# -----------------------
+# =====================================================
 app = Flask(__name__)
-app.secret_key = "your_secret_key"  # Change to a secure key
+app.secret_key = "your_secret_key"  # Change this to a secure value
 bcrypt = Bcrypt(app)
-socketio = SocketIO(app, cors_allowed_origins="http://localhost:5000")
+# SocketIO/group-chat removed
 
 # File upload config
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp", "pdf", "doc", "docx", "txt"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB
@@ -43,9 +44,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///notes.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# -----------------------
+# =====================================================
 # Models
-# -----------------------
+# =====================================================
 class User(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
@@ -57,32 +58,20 @@ class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    attachment = db.Column(db.String(255))  # stores uploaded file name
+    attachment = db.Column(db.String(255))  # uploaded file name
 
-class Group(db.Model):
-    __tablename__ = "groups"
+# Subject model for Subject Focus Wheel
+class Subject(db.Model):
+    __tablename__ = "subject"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    uuid_link = db.Column(db.String(36), unique=True, nullable=False)
-    created_at = db.Column(db.String(30), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
-class GroupMember(db.Model):
-    __tablename__ = "group_members"
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), primary_key=True)
+# Removed Group, GroupMember, Message models (group chat removed)
 
-class Message(db.Model):
-    __tablename__ = "messages"
-    id = db.Column(db.Integer, primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.String(30), nullable=False)
-
-# -----------------------
+# =====================================================
 # Helpers
-# -----------------------
+# =====================================================
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -95,11 +84,8 @@ def delete_file_if_exists(filename: str):
     if not filename:
         return
     path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    try:
-        if os.path.exists(path):
-            os.remove(path)
-    except Exception:
-        pass
+    if os.path.exists(path):
+        os.remove(path)
 
 def ensure_attachment_column():
     try:
@@ -118,18 +104,16 @@ def init_db():
     except Exception as e:
         print("Error creating/upgrading database:", e)
 
-# -----------------------
-# Routes
-# -----------------------
-
-# Home page (your index.html)
+# =====================================================
+# Routes: Home
+# =====================================================
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# -----------------------
-# Auth: Signup/Login/Logout
-# -----------------------
+# =====================================================
+# Auth: Signup / Login / Logout
+# =====================================================
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -165,15 +149,42 @@ def login():
         return redirect(url_for('login'))
     return render_template('login.html')
 
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    flash('Logged out.', 'success')
-    return redirect(url_for('login'))
+# =====================================================
+# Dashboard with Subject Focus Wheel
+# =====================================================
 
-# -----------------------
-# Dashboard & Groups
-# -----------------------
+# Simple TASK suggestions (you can expand)
+
+TASKS = {
+    "Math": [
+        "Solve 5 practice problems",
+        "Review formulas",
+        "Work on past exam questions"
+    ],
+    "Science": [
+        "Summarize today’s notes",
+        "Draw a diagram",
+        "Revise key definitions"
+    ],
+    "History": [
+        "Memorize 5 dates",
+        "Summarize a topic",
+        "Write a timeline"
+    ],
+    "English": [
+        "Read a chapter",
+        "Write a short essay",
+        "Revise vocabulary"
+    ],
+    "default": [
+        "Do a short review",
+        "Practice active recall",
+        "Summarize in your own words"
+    ]
+}
+
+
+# Dashboard
 @app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
@@ -184,12 +195,17 @@ def dashboard():
         session.pop('username', None)
         flash('User not found.', 'error')
         return redirect(url_for('login'))
-    group_count = Group.query.filter_by(owner_id=user.id).count()
-    groups = db.session.query(Group).join(GroupMember).filter(GroupMember.user_id == user.id).all()
-    return render_template('dashboard.html', username=session['username'], group_count=group_count, groups=groups)
+    
+    # Get user's subjects (if any)
+    try:
+        subjects = Subject.query.filter_by(user_id=user.id).all()
+    except Exception:
+        subjects = []
+    return render_template('dashboard.html', username=session['username'], subjects=subjects)
 
-@app.route('/create_group', methods=['POST'])
-def create_group():
+# Add Subject
+@app.route('/add_subject', methods=['POST'])
+def add_subject():
     if 'username' not in session:
         flash('Please log in.', 'error')
         return redirect(url_for('login'))
@@ -198,87 +214,75 @@ def create_group():
         session.pop('username', None)
         flash('User not found.', 'error')
         return redirect(url_for('login'))
-    if Group.query.filter_by(owner_id=user.id).count() >= 4:
-        flash('Max groups reached.', 'error')
+    
+    subject_name = request.form.get('subject_name', '').strip()
+    if not subject_name:
+        flash('Subject name cannot be empty.', 'error')
         return redirect(url_for('dashboard'))
-    group_name = request.form.get('group_name', '').strip()
-    if not group_name:
-        flash('Group name cannot be empty.', 'error')
+    
+    if Subject.query.filter_by(user_id=user.id, name=subject_name).first():
+        flash('Subject already exists.', 'error')
         return redirect(url_for('dashboard'))
-    uuid_link = str(uuid.uuid4())
-    group = Group(name=group_name, owner_id=user.id, uuid_link=uuid_link, created_at=datetime.now().isoformat())
-    db.session.add(group)
-    db.session.flush()
-    db.session.add(GroupMember(user_id=user.id, group_id=group.id))
+    
+    subject = Subject(name=subject_name, user_id=user.id)
+    db.session.add(subject)
     db.session.commit()
-    flash('Group created!', 'success')
+    # Reset recent subjects when a new subject is added
+    session.pop('recent_subjects', None)
+    flash('Subject added!', 'success')
     return redirect(url_for('dashboard'))
 
-@app.route('/join/<uuid_link>')
-def join(uuid_link):
+# Spin route for Subject Focus Wheel
+@app.route('/spin', methods=['GET', 'POST'])
+def spin():
     if 'username' not in session:
-        flash('Please log in.', 'error')
-        return redirect(url_for('login'))
+        return jsonify({'error': 'Please log in.'}), 401
     user = User.query.filter_by(username=session['username']).first()
     if not user:
-        session.pop('username', None)
-        flash('User not found.', 'error')
-        return redirect(url_for('login'))
-    group = Group.query.filter_by(uuid_link=uuid_link).first()
-    if not group:
-        flash('Invalid link.', 'error')
-        return redirect(url_for('dashboard'))
-    existing_member = GroupMember.query.filter_by(user_id=user.id, group_id=group.id).first()
-    if not existing_member:
-        db.session.add(GroupMember(user_id=user.id, group_id=group.id))
-        db.session.commit()
-        flash('Joined group!', 'success')
-    return redirect(url_for('chat', group_id=group.id))
+        return jsonify({'error': 'User not found.'}), 404
+    
+    subjects = Subject.query.filter_by(user_id=user.id).all()
+    subject_names = [s.name for s in subjects] or ["Math", "Science", "History", "English"]  # Fallback if no subjects
+    
+    if request.method == 'POST':
+        data = request.get_json(silent=True) or {}
+        if data.get('reset'):
+            session.pop('recent_subjects', None)
+            return jsonify({'message': 'Subject selection reset'})
+    
+    # Get recently used subjects
+    recent_subjects = session.get('recent_subjects', [])
+    
+    # Filter out the last used subject (if any) to avoid immediate repetition
+    available_subjects = [s for s in subject_names if s not in recent_subjects[-1:]]
+    if not available_subjects:
+        # If all subjects have been used recently, reset the recent list
+        available_subjects = subject_names
+        recent_subjects = []
+    
+    # Select a random subject from available ones
+    selected_subject = random.choice(available_subjects)
+    
+    # Update recent subjects (keep only the last 2 to allow variety)
+    recent_subjects.append(selected_subject)
+    if len(recent_subjects) > 2:
+        recent_subjects.pop(0)
+    session['recent_subjects'] = recent_subjects
+    
+    selected_task = random.choice(TASKS.get(selected_subject, TASKS["default"]))
+    return jsonify({'subject': selected_subject, 'task': selected_task})
 
-# -----------------------
-# Chat room
-# -----------------------
-@app.route('/chat/<int:group_id>')
-def chat(group_id):
-    if 'username' not in session:
-        flash('Please log in.', 'error')
-        return redirect(url_for('login'))
-    user = User.query.filter_by(username=session['username']).first()
-    if not user:
-        session.pop('username', None)
-        flash('User not found.', 'error')
-        return redirect(url_for('login'))
-    member = GroupMember.query.filter_by(user_id=user.id, group_id=group_id).first()
-    if not member:
-        flash('Not a member.', 'error')
-        return redirect(url_for('dashboard'))
-    group = Group.query.get_or_404(group_id)
-    messages = db.session.query(Message, User.username).join(User, Message.user_id == User.id).filter(Message.group_id == group_id).order_by(Message.timestamp).all()
-    return render_template('chat.html', group_name=group.name, group_id=group_id, messages=messages)
+# Logout (single definition)
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    session.pop('recent_subjects', None)
+    flash('Logged out.', 'success')
+    return redirect(url_for('login'))
 
-@socketio.on('join')
-def on_join(data):
-    group_id = data['group_id']
-    join_room(str(group_id))
-
-@socketio.on('send_message')
-def on_message(data):
-    if 'username' not in session:
-        return
-    user = User.query.filter_by(username=session['username']).first()
-    if not user:
-        return
-    group_id = data['group_id']
-    message_content = data['message']
-    timestamp = datetime.now().isoformat()
-    message = Message(group_id=group_id, user_id=user.id, content=message_content, timestamp=timestamp)
-    db.session.add(message)
-    db.session.commit()
-    send({'username': session['username'], 'message': message_content}, to=str(group_id))
-
-# -----------------------
-# Notes system
-# -----------------------
+# =====================================================
+# Notes System
+# =====================================================
 @app.route('/notes')
 def notes_index():
     if 'username' not in session:
@@ -354,12 +358,12 @@ def delete_note(id):
     flash("Note deleted!", "success")
     return redirect(url_for('notes_index'))
 
-# -----------------------
+# =====================================================
 # AI Chat (Mistral)
-# -----------------------
+# =====================================================
 @app.route("/chat_ai", methods=["POST"])
 def chat_ai():
-    data = request.get_json(silent=True)
+    data = request.get_json(silent=True) or {}
     user_message = (data.get("message") or "").strip()
     if not user_message:
         return jsonify({"reply": "Please type a message."}), 400
@@ -369,9 +373,9 @@ def chat_ai():
         reply = f"Error: {str(e)}"
     return jsonify({"reply": reply}), 200
 
-# -----------------------
-# Gemini Quiz
-# -----------------------
+# =====================================================
+# Gemini Quiz Generator
+# =====================================================
 @app.route("/quiz", methods=["POST"])
 def generate_quiz():
     data = request.get_json() or {}
@@ -381,12 +385,12 @@ def generate_quiz():
         return jsonify({"ok": False, "error": "Missing topic"}), 400
     prompt = f"""
     You are an assistant that generates educational multiple-choice quizzes.
-    Produce exactly 5 questions on "{topic}".
+    Produce exactly 5 questions on \"{topic}\".
     Each question should include:
-      - "question": string
-      - "options": array of 4 strings
-      - "answer": index (0-3)
-      - "explanation": short string
+      - \"question\": string
+      - \"options\": array of 4 strings
+      - \"answer\": index (0-3)
+      - \"explanation\": short string
     Difficulty: {difficulty}
     Output STRICT JSON: an array of 5 objects. Do NOT output anything else.
     """
@@ -402,22 +406,18 @@ def generate_quiz():
             if m:
                 quiz = json.loads(m.group(1))
             else:
-                return jsonify({"ok": False, "error": "Could not parse model output as JSON", "raw": text}), 500
+                return jsonify({"ok": False, "error": "Could not parse model output", "raw": text}), 500
         if not isinstance(quiz, list) or len(quiz) != 5:
-            return jsonify({"ok": False, "error": "Model returned unexpected structure", "raw": text}), 500
-        for i, q in enumerate(quiz):
-            if not all(k in q for k in ("question","options","answer","explanation")):
-                return jsonify({"ok": False, "error": f"Question {i} missing fields", "raw": text}), 500
-            if not isinstance(q["options"], list) or len(q["options"]) < 4:
-                return jsonify({"ok": False, "error": f"Question {i} must have 4 options", "raw": text}), 500
+            return jsonify({"ok": False, "error": "Unexpected structure", "raw": text}), 500
         return jsonify({"ok": True, "questions": quiz})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# -----------------------
-# Run
-# -----------------------
+# =====================================================
+# Run app
+# =====================================================
 if __name__ == '__main__':
     with app.app_context():
         init_db()
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    # Run the Flask app normally (SocketIO removed)
+    app.run(debug=True, host='0.0.0.0', port=5000)
