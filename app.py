@@ -209,6 +209,7 @@ def add_subject():
     if 'username' not in session:
         flash('Please log in.', 'error')
         return redirect(url_for('login'))
+    
     user = User.query.filter_by(username=session['username']).first()
     if not user:
         session.pop('username', None)
@@ -227,50 +228,81 @@ def add_subject():
     subject = Subject(name=subject_name, user_id=user.id)
     db.session.add(subject)
     db.session.commit()
-    # Reset recent subjects when a new subject is added
-    session.pop('recent_subjects', None)
     flash('Subject added!', 'success')
     return redirect(url_for('dashboard'))
 
-# Spin route for Subject Focus Wheel
-@app.route('/spin', methods=['GET', 'POST'])
+
+# Edit Subject
+@app.route('/edit_subject/<int:subject_id>', methods=['POST'])
+def edit_subject(subject_id):
+    if 'username' not in session:
+        flash('Please log in.', 'error')
+        return redirect(url_for('login'))
+
+    user = User.query.filter_by(username=session['username']).first()
+    subject = Subject.query.filter_by(id=subject_id, user_id=user.id).first()
+    
+    if not subject:
+        flash('Subject not found.', 'error')
+        return redirect(url_for('dashboard'))
+
+    new_name = request.form.get('subject_name', '').strip()
+    if not new_name:
+        flash('New subject name cannot be empty.', 'error')
+        return redirect(url_for('dashboard'))
+
+    subject.name = new_name
+    db.session.commit()
+    flash('Subject updated!', 'success')
+    return redirect(url_for('dashboard'))
+
+
+# Delete Subject
+@app.route('/delete_subject/<int:subject_id>', methods=['POST'])
+def delete_subject(subject_id):
+    if 'username' not in session:
+        flash('Please log in.', 'error')
+        return redirect(url_for('login'))
+
+    user = User.query.filter_by(username=session['username']).first()
+    subject = Subject.query.filter_by(id=subject_id, user_id=user.id).first()
+
+    if not subject:
+        flash('Subject not found.', 'error')
+        return redirect(url_for('dashboard'))
+
+    db.session.delete(subject)
+    db.session.commit()
+    flash('Subject deleted!', 'success')
+    return redirect(url_for('dashboard'))
+
+
+# Spin Route (Wheel Logic)
+@app.route('/spin', methods=['GET'])
 def spin():
     if 'username' not in session:
         return jsonify({'error': 'Please log in.'}), 401
+
     user = User.query.filter_by(username=session['username']).first()
     if not user:
         return jsonify({'error': 'User not found.'}), 404
-    
+
     subjects = Subject.query.filter_by(user_id=user.id).all()
-    subject_names = [s.name for s in subjects] or ["Math", "Science", "History", "English"]  # Fallback if no subjects
-    
-    if request.method == 'POST':
-        data = request.get_json(silent=True) or {}
-        if data.get('reset'):
-            session.pop('recent_subjects', None)
-            return jsonify({'message': 'Subject selection reset'})
-    
-    # Get recently used subjects
-    recent_subjects = session.get('recent_subjects', [])
-    
-    # Filter out the last used subject (if any) to avoid immediate repetition
-    available_subjects = [s for s in subject_names if s not in recent_subjects[-1:]]
-    if not available_subjects:
-        # If all subjects have been used recently, reset the recent list
-        available_subjects = subject_names
-        recent_subjects = []
-    
-    # Select a random subject from available ones
-    selected_subject = random.choice(available_subjects)
-    
-    # Update recent subjects (keep only the last 2 to allow variety)
-    recent_subjects.append(selected_subject)
-    if len(recent_subjects) > 2:
-        recent_subjects.pop(0)
-    session['recent_subjects'] = recent_subjects
-    
+    subject_names = [s.name for s in subjects] or ["Math", "Science", "History", "English"]
+
+    # Pick a random subject index
+    winning_index = random.randint(0, len(subject_names) - 1)
+    selected_subject = subject_names[winning_index]
+
+    # Pick a task for the selected subject
     selected_task = random.choice(TASKS.get(selected_subject, TASKS["default"]))
-    return jsonify({'subject': selected_subject, 'task': selected_task})
+
+    return jsonify({
+        'subjects': subject_names,    # frontend uses this to build the wheel
+        'winning_index': winning_index,  # arrow points here
+        'subject': selected_subject,
+        'task': selected_task
+    })
 
 # Logout (single definition)
 @app.route('/logout')

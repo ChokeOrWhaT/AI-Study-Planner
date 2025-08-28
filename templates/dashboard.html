@@ -50,7 +50,7 @@
 
     .blob {
       position: absolute;
-      border-radius: 50%;
+      border-radius: 70%;
       mix-blend-mode: screen;
       animation: drift 50s infinite alternate ease-in-out;
     }
@@ -65,7 +65,7 @@
 
     .blob.two {
       width: 400px;
-      height: 400px;
+      height: 1000px;
       bottom: -120px;
       right: -120px;
       background: var(--accent);
@@ -78,7 +78,7 @@
     }
 
     .container {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 20px auto;
       padding: 20px;
     }
@@ -183,29 +183,35 @@
       opacity: 0.9;
     }
 
-    .wheel-container {
-      text-align: center;
-      margin-top: 20px;
-    }
+.wheel {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #8e44ad 0deg 90deg,     /* deep purple */
+    #3498db 90deg 180deg,   /* soft blue */
+    #2ecc71 180deg 270deg,  /* mint green */
+    #f39c12 270deg 360deg   /* warm amber */
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  margin: 40px auto;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+}
 
-    .wheel {
-      width: 100px;
-      height: 100px;
-      border: 4px solid var(--primary);
-      border-radius: 50%;
-      margin: 0 auto;
-      background: var(--glass);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      color: var(--secondary);
-      font-weight: 500;
-    }
+.wheel:hover {
+  transform: scale(1.07); /* no rotate to avoid breaking spin */
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+}
 
-    .wheel.spinning {
-      animation: spin 1.5s ease-in-out;
-    }
 
     @keyframes spin {
       0% {
@@ -227,7 +233,7 @@
       color: var(--light);
       opacity: 0.9;
     }
-
+    
     .wheel-button,
     .reset-button {
       padding: 8px 16px;
@@ -241,19 +247,99 @@
       background: linear-gradient(45deg, var(--accent), var(--primary));
     }
 
-    .subject-list {
-      margin-top: 15px;
-      font-size: 14px;
-      color: var(--light);
-      opacity: 0.85;
-    }
+.subject-list {
+  margin-top: 20px;
+  font-size: 15px;
+  color: var(--light);
+  opacity: 0.9;
+  list-style: none;
+  padding: 0;
+}
 
-    .subject-list li {
+.subject-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.subject-list li:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.subject-list .subject-name {
+  font-weight: 500;
+  font-size: 16px;
+  flex: 1; /* takes remaining space */
+}
+
+.subject-list .actions {
+  display: flex;
+  gap: 8px;
+}
+
+.subject-list button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.subject-list .edit-btn {
+  background: #4cafef;
+  color: #fff;
+}
+
+.subject-list .edit-btn:hover {
+  background: #3498db;
+}
+
+.subject-list .delete-btn {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.subject-list .delete-btn:hover {
+  background: #c0392b;
+}
+
+.subject-list button {
+  min-width: 80px;           /* ensures both buttons are same width */
+  height: 32px;              /* consistent height */
+  font-size: 16px;           /* same as subject name */
+  font-weight: 500;
+  padding: 0;                /* remove uneven padding */
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* centers text */
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.subject-list button:hover {
+  transform: scale(1.05);    /* subtle hover pop */
+}
+
+    .logout-btn {
       display: inline-block;
-      margin-right: 10px;
-      padding: 5px 10px;
-      background: rgba(255, 255, 255, 0.05);
+      margin-top: 20px;
+      /* pushes it down from the top */
+      padding: 10px 15px;
+      /* inner spacing */
+      text-decoration: none;
       border-radius: 8px;
+      font-weight: bold;
+      transition: 0.3s;
     }
   </style>
 </head>
@@ -271,7 +357,7 @@
     <nav class="nav-links">
       <a href="#features">Features</a>
       <a href="{{ url_for('notes_index') }}">Notes</a>
-      <a href="{{ url_for('dashboard') }}">Group Chat</a>
+      <a href="{{ url_for('dashboard') }}">Spinner</a>
       <a href="{{ url_for('login') }}" class="login-btn">Login</a>
     </nav>
 
@@ -294,66 +380,134 @@
     <div class="blob two"></div>
   </div>
 
-  <div class="container">
-    <h1>Welcome, {{ username }}</h1>
+<div class="container">
+  <h1>Welcome, {{ username }}</h1>
 
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-    <p class="{{ 'error' if category == 'error' else 'success' }}">{{ message }}</p>
-    {% endfor %}
+  {% for category, message in get_flashed_messages(with_categories=true) %}
+  <p class="{{ 'error' if category == 'error' else 'success' }}">{{ message }}</p>
+  {% endfor %}
 
-    <div class="card">
-      <h2>Study Partner Dashboard</h2>
-      <p>
-        <a href="{{ url_for('notes_index') }}">Manage Notes</a> |
-        <a href="{{ url_for('index') }}">AI Study Partner</a>
-      </p>
-    </div>
-
-    <!-- Subject Focus Wheel -->
-    <div class="card wheel-container">
-      <h2>Subject Focus Wheel</h2>
-
-      <form method="post" action="{{ url_for('add_subject') }}">
-        <label for="subject_name">Add a Subject</label>
-        <input type="text" name="subject_name" id="subject_name" placeholder="e.g., Math" required>
-        <button type="submit">Add Subject</button>
-      </form>
-
-      <h3>Your Subjects</h3>
-      {% if subjects %}
-      <ul class="subject-list">
-        {% for subject in subjects %}
-        <li>{{ subject.name }}</li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="error">No subjects yet. Add one above to start spinning!</p>
-      {% endif %}
-
-      <div class="wheel" id="wheel">Spin Me!</div>
-      <div id="wheel-result">Click Spin to get your focus subject!</div>
-      <button type="button" class="wheel-button" onclick="spinWheel()">Spin</button>
-      <button type="button" class="reset-button" onclick="resetWheel()">Reset Subject</button>
-    </div>
-
-    <a href="{{ url_for('logout') }}">Logout</a>
+  <div class="card">
+    <h2>Study Partner Dashboard</h2>
+    <p>
+      <a href="{{ url_for('notes_index') }}">Manage Notes</a> |
+      <a href="{{ url_for('index') }}">AI Study Partner</a>
+    </p>
   </div>
 
+  <!-- Subject Focus Wheel -->
+  <div class="card wheel-container">
+    <h2>Subject Focus Wheel</h2>
 
-    <footer>
-            <div class="footer-content">
-                <div class="footer-logo">AI<span>Study</span>Partner</div>
-                <div class="footer-links">
-                    <a href="#privacy">Privacy</a>
-                    <a href="#terms">Terms</a>
-                    <a href="#contact">Contact</a>
-                    <a href="#blog">Blog</a>
+    <form method="post" action="{{ url_for('add_subject') }}">
+      <label for="subject_name">Add a Subject</label>
+      <input type="text" name="subject_name" id="subject_name" placeholder="e.g., Math" required>
+      <button type="submit">Add Subject</button>
+    </form>
+
+    <h3>Your Subjects</h3>
+    {% if subjects %}
+    <ul class="subject-list">
+  {% for subject in subjects %}
+  <li>
+    <span class="subject-name">{{ subject.name }}</span>
+    <div class="actions">
+      <!-- Edit toggle button -->
+      <button type="button" class="edit-btn" onclick="toggleEditForm('{{ subject.id }}')">✏️ Edit</button>
+
+      <!-- Delete button -->
+      <form method="post" action="{{ url_for('delete_subject', subject_id=subject.id) }}" style="display:inline;">
+        <button type="submit" class="delete-btn">🗑 Delete</button>
+      </form>
+    </div>
+
+    <!-- Hidden edit form -->
+    <form id="edit-form-{{ subject.id }}" method="post" action="{{ url_for('edit_subject', subject_id=subject.id) }}" style="display:none; margin-top:8px;">
+      <input type="text" name="new_name" placeholder="Edit name" required>
+      <button type="submit" class="edit-btn">Save</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+    {% else %}
+    <p class="error">No subjects yet. Add one above to start spinning!</p>
+    {% endif %}
+
+    <div class="wheel" id="wheel">Spin Me!</div>
+    <div id="wheel-result">Click Spin to get your focus subject!</div>
+    <button type="button" class="wheel-button" onclick="spinWheel()">Spin</button>
+  </div>
+
+  <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+</div>
+
+
+
+ <!-- Features Section -->
+        <section id="features" class="features">
+            <h2 class="section-title">Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card bevel-effect card-3d">
+                    <div class="feature-icon floating">📚</div>
+                    <h3 class="feature-title">Flexible Scheduling</h3>
+                    <p class="feature-description">Plan and manage your study or group sessions with an easy-to-use
+                        scheduler, tailored to your timeline.</p>
+                </div>
+
+                <div class="feature-card bevel-effect card-3d">
+                    <div class="feature-icon floating">⏱️</div>
+                    <h3 class="feature-title">Collaborative ChatGroups</h3>
+                    <p class="feature-description">Connect with peers in real-time chat groups to discuss, share ideas,
+                        and work together seamlessly.</p>
+                </div>
+
+                <div class="feature-card bevel-effect card-3d">
+                    <div class="feature-icon floating">🧠</div>
+                    <h3 class="feature-title">Organized Notes</h3>
+                    <p class="feature-description">Keep all your learning materials in one place with a notes system
+                        designed for easy access and review.</p>
+                </div>
+
+                <div class="feature-card bevel-effect card-3d">
+                    <div class="feature-icon floating">📊</div>
+                    <h3 class="feature-title">Smart AI Chatbot</h3>
+                    <p class="feature-description">Get instant, accurate answers to your questions with an AI chatbot
+                        that adapts to your needs.</p>
+                </div>
+
+                <div class="feature-card bevel-effect card-3d">
+                    <div class="feature-icon floating">💬</div>
+                    <h3 class="feature-title">Interactive Quiz Generator</h3>
+                    <p class="feature-description">Create and take customized quizzes to test your knowledge and
+                        reinforce learning across any subject.</p>
+                </div>
+
+                <div class="feature-card bevel-effect card-3d">
+                    <div class="feature-icon floating">🌐</div>
+                    <h3 class="feature-title">Multi-Subject Support</h3>
+                    <p class="feature-description">Comprehensive coverage across STEM, humanities, and professional
+                        subjects.</p>
                 </div>
             </div>
-            <div class="copyright">
-                &copy; 2023 AI Study Partner. All rights reserved.
-            </div>
-    </footer>
+        </section>
+
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-logo">AI<span>Study</span>Partner</div>
+      <div class="footer-links">
+        <a href="#privacy">Privacy</a>
+        <a href="#terms">Terms</a>
+        <a href="#contact">Contact</a>
+        <a href="#blog">Blog</a>
+      </div>
+    </div>
+    <div class="copyright">
+      &copy; 2023 AI Study Partner. All rights reserved.
+    </div>
+  </footer>
+
+
   <script>
     // Animate cards on load
     gsap.from(".card", { opacity: 0, y: 40, duration: 0.6, ease: "power2.out", stagger: 0.1 });
@@ -395,23 +549,11 @@
       });
     }
 
-    // Reset wheel logic
-    function resetWheel() {
-      fetch('/spin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reset: true })
-      })
-        .then(response => response.json())
-        .then(() => {
-          const resultDiv = document.getElementById('wheel-result');
-          resultDiv.textContent = 'Subject selection reset! Spin again to select a new subject.';
-          document.getElementById('wheel').textContent = 'Spin Me!';
-        })
-        .catch(() => {
-          document.getElementById('wheel-result').textContent = 'Error resetting wheel. Try again.';
-        });
-    }
+
+    function toggleEditForm(subjectId) {
+  const form = document.getElementById(`edit-form-${subjectId}`);
+  form.style.display = form.style.display === "none" ? "inline" : "none";
+}
   </script>
 </body>
 
